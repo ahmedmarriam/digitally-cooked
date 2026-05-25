@@ -7,13 +7,29 @@ export default function FinalCTA() {
         overflow: "hidden",
       }}
     >
-      {/* Background */}
+      {/* Background photo — entrepreneur at work */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1600&q=80&auto=format&fit=crop"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: 0.08,
+        }}
+      />
+
+      {/* Background overlay */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(236,72,153,0.06) 50%, rgba(249,115,22,0.08) 100%)",
+            "linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(0,0,0,0.6) 50%, rgba(249,115,22,0.12) 100%)",
           borderTop: "1px solid rgba(139,92,246,0.2)",
           borderBottom: "1px solid rgba(139,92,246,0.2)",
         }}

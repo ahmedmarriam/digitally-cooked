@@ -106,7 +106,7 @@ export default function DemoVideo() {
             </div>
           </div>
 
-          {/* Placeholder thumbnail content */}
+          {/* Real thumbnail image */}
           <div
             style={{
               position: "absolute",
@@ -116,11 +116,32 @@ export default function DemoVideo() {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              background: "linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(0,0,0,0) 50%, rgba(249,115,22,0.06) 100%)",
             }}
           >
+            {/* Background photo — dark moody workspace */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1400&q=85&auto=format&fit=crop"
+              alt="Developer workspace"
+              style={{
+                position: "absolute",
+                inset: "40px 0 0",
+                width: "100%",
+                height: "calc(100% - 40px)",
+                objectFit: "cover",
+                opacity: 0.35,
+              }}
+            />
+            {/* Gradient overlay to maintain brand colours */}
+            <div
+              style={{
+                position: "absolute",
+                inset: "40px 0 0",
+                background: "linear-gradient(135deg, rgba(139,92,246,0.55) 0%, rgba(0,0,0,0.4) 50%, rgba(249,115,22,0.35) 100%)",
+              }}
+            />
             {/* Decorative mock UI in background */}
-            <div style={{ position: "absolute", inset: "40px 0 0", opacity: 0.15, display: "flex", gap: "20px", padding: "30px", overflow: "hidden" }}>
+            <div style={{ position: "absolute", inset: "40px 0 0", opacity: 0.12, display: "flex", gap: "20px", padding: "30px", overflow: "hidden" }}>
               {/* Left: form mockup */}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
                 {["Brand Name", "Industry / Niche", "Tone of Voice", "Target Audience"].map((label) => (

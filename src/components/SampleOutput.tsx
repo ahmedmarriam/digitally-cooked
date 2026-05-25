@@ -11,6 +11,7 @@ const samplePosts = [
     cta: "Save this for your next content session.",
     hashtags: "#SmallBusiness #SocialMediaStrategy #ContentMarketing #InstagramGrowth #DigitalMarketing",
     imagePrompt: "A determined entrepreneur at a sleek desk at golden hour, soft bokeh, editorial lighting, professional lifestyle photography",
+    imageUrl: "https://images.unsplash.com/photo-1664575602276-acd073f104c1?w=600&q=85&auto=format&fit=crop",
   },
   {
     platform: "TikTok",
@@ -24,6 +25,7 @@ const samplePosts = [
     cta: "Follow for daily marketing tips that actually work.",
     hashtags: "#ContentCreator #MarketingTips #AIContent #BusinessOwner #SocialMediaMarketing",
     imagePrompt: "Close-up of hands typing on a glowing laptop, dark moody background, purple and orange accent lighting, cinematic",
+    imageUrl: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&q=85&auto=format&fit=crop",
   },
   {
     platform: "LinkedIn",
@@ -37,6 +39,7 @@ const samplePosts = [
     cta: "Comment 'CONTENT' and I'll send you how we do it.",
     hashtags: "#Entrepreneurship #ContentStrategy #BusinessGrowth #Marketing #LinkedInMarketing",
     imagePrompt: "Clean professional office with city views, person in business attire reviewing analytics on a large monitor, natural daylight",
+    imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=85&auto=format&fit=crop",
   },
 ];
 
@@ -153,25 +156,49 @@ export default function SampleOutput() {
               {/* Image area */}
               <div
                 style={{
-                  height: "120px",
+                  height: "180px",
                   background: `linear-gradient(135deg, ${post.platformColor}20, rgba(139,92,246,0.15))`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   position: "relative",
                   borderBottom: "1px solid rgba(139,92,246,0.1)",
+                  overflow: "hidden",
                 }}
               >
-                <div style={{ textAlign: "center", padding: "0 20px" }}>
-                  <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", marginBottom: "6px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                {/* Real AI-style photo */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.imageUrl}
+                  alt={`${post.platform} post visual`}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    opacity: 0.55,
+                  }}
+                />
+                {/* Colour tint overlay */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: `linear-gradient(135deg, ${post.platformColor}40, rgba(0,0,0,0.3))`,
+                  }}
+                />
+                <div style={{ textAlign: "center", padding: "0 20px", position: "relative", zIndex: 1 }}>
+                  <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", marginBottom: "6px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
                     AI Image Prompt
                   </div>
                   <div
                     style={{
-                      fontSize: "0.78rem",
-                      color: "rgba(255,255,255,0.65)",
+                      fontSize: "0.72rem",
+                      color: "rgba(255,255,255,0.8)",
                       fontStyle: "italic",
                       lineHeight: 1.5,
+                      textShadow: "0 1px 4px rgba(0,0,0,0.8)",
                     }}
                   >
                     "{post.imagePrompt}"
@@ -184,11 +211,12 @@ export default function SampleOutput() {
                     right: "10px",
                     padding: "3px 8px",
                     borderRadius: "6px",
-                    background: "rgba(139,92,246,0.2)",
-                    border: "1px solid rgba(139,92,246,0.3)",
+                    background: "rgba(0,0,0,0.5)",
+                    border: "1px solid rgba(139,92,246,0.4)",
                     fontSize: "0.65rem",
                     color: "#a78bfa",
                     fontWeight: 600,
+                    zIndex: 2,
                   }}
                 >
                   🖼️ Ideogram
