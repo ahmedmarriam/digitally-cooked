@@ -5,19 +5,23 @@ import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Signup failed."); return; }
@@ -42,6 +46,13 @@ export default function SignupPage() {
     transition: "border-color 0.2s",
   };
 
+  const fields = [
+    { key: "name", label: "FULL NAME", type: "text", placeholder: "Jane Smith" },
+    { key: "email", label: "EMAIL", type: "email", placeholder: "you@example.com" },
+    { key: "password", label: "PASSWORD", type: "password", placeholder: "Min. 6 characters" },
+    { key: "confirmPassword", label: "CONFIRM PASSWORD", type: "password", placeholder: "Re-enter your password" },
+  ];
+
   return (
     <div style={{ minHeight: "100vh", background: "#0F0E1A", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: "var(--font-geist-sans), Arial, sans-serif" }}>
       {/* Background orbs */}
@@ -65,11 +76,7 @@ export default function SignupPage() {
         {/* Card */}
         <div style={{ background: "#1C1B2E", border: "1px solid rgba(123,47,255,0.2)", borderRadius: "20px", padding: "36px 32px", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            {[
-              { key: "name", label: "FULL NAME", type: "text", placeholder: "Jane Smith" },
-              { key: "email", label: "EMAIL", type: "email", placeholder: "you@example.com" },
-              { key: "password", label: "PASSWORD", type: "password", placeholder: "Min. 6 characters" },
-            ].map(({ key, label, type, placeholder }) => (
+            {fields.map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "rgba(241,241,241,0.6)", marginBottom: "7px", letterSpacing: "0.04em" }}>{label}</label>
                 <input

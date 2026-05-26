@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const steps = [
-  "Analysing your brand profile...",
-  "Crafting content strategy...",
-  "Writing hooks & captions...",
-  "Generating image prompts...",
-  "Scheduling to your calendar...",
-  "Finalising your content pack...",
+  "Brand profile analysed",
+  "Generating 40 posts...",
+  "Creating AI images...",
+  "Building your calendar...",
+  "Scheduling your posts...",
 ];
 
 export default function ProcessingPage() {
@@ -34,10 +33,10 @@ export default function ProcessingPage() {
       });
     }, 100);
 
-    // Redirect after ~14s
+    // Redirect after 10s
     const redirect = setTimeout(() => {
       router.push("/dashboard");
-    }, 14000);
+    }, 10000);
 
     return () => {
       clearInterval(stepInterval);

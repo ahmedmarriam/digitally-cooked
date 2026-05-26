@@ -72,7 +72,7 @@ export default function Hero() {
           <h1
             className="animate-fade-in-up"
             style={{
-              fontSize: "clamp(2.4rem, 5vw, 3.8rem)",
+              fontSize: "clamp(2.2rem, 5vw, 3.6rem)",
               fontWeight: 900,
               lineHeight: 1.08,
               letterSpacing: "-0.02em",
@@ -80,8 +80,8 @@ export default function Hero() {
               animationDelay: "0.2s",
             }}
           >
-            Your Month of Content,{" "}
-            <span className="gradient-text">Cooked in Minutes.</span>
+            Your Complete Social Media{" "}
+            <span className="gradient-text">Department. Automated.</span>
           </h1>
 
           {/* Sub */}
@@ -96,9 +96,8 @@ export default function Hero() {
               animationDelay: "0.3s",
             }}
           >
-            Fill out one brand profile. Get{" "}
-            <strong style={{ color: "#fff" }}>40 platform-perfect posts</strong> — with hooks,
-            captions, CTAs, hashtags, and AI-generated images — automatically, every month.
+            We write it. We design it. We schedule it.{" "}
+            <strong style={{ color: "#fff" }}>We post it.</strong> You just show up.
           </p>
 
           {/* CTAs */}
@@ -132,7 +131,7 @@ export default function Hero() {
           >
             {[
               { number: "40", label: "Posts per Month" },
-              { number: "5", label: "Platforms Covered" },
+              { number: "15", label: "Platforms Supported" },
               { number: "<5", label: "Minutes to Generate" },
             ].map(({ number, label }) => (
               <div key={label}>
