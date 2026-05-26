@@ -101,7 +101,7 @@ export default function DemoVideo() {
               }}
             >
               <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.3)" }}>
-                app.digitallycookedai.com/generate
+                app.digitallycookedai.com
               </span>
             </div>
           </div>

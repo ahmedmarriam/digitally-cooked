@@ -219,7 +219,7 @@ export default function SampleOutput() {
                     zIndex: 2,
                   }}
                 >
-                  🖼️ Ideogram
+                  🖼️ AI Image
                 </div>
               </div>
 

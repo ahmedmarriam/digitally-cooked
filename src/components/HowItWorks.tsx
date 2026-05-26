@@ -13,9 +13,9 @@ const steps = [
     icon: "🤖",
     title: "AI Cooks Your Content",
     description:
-      "Our pipeline powered by Claude AI crafts 40 unique, on-brand posts tailored specifically to your business. Every post gets a hook, caption, CTA, hashtags, and an AI image prompt.",
+      "Our AI pipeline crafts 40 unique, on-brand posts tailored specifically to your business. Every post gets a hook, caption, CTA, hashtags, and an AI-generated image prompt.",
     color: "#ec4899",
-    tags: ["Claude AI", "Ideogram Images", "Platform-Specific", "On-Brand"],
+    tags: ["AI-Powered", "Image Generation", "Platform-Specific", "On-Brand"],
   },
   {
     number: "03",

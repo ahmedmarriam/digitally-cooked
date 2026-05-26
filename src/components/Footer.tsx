@@ -87,7 +87,7 @@ export default function Footer() {
             </p>
             {/* Powered by */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {["Claude AI", "Ideogram", "Runway ML"].map((tech) => (
+              {["AI-Powered", "Our Pipeline", "Our Technology"].map((tech) => (
                 <span
                   key={tech}
                   style={{
@@ -185,7 +185,7 @@ export default function Footer() {
                 fontWeight: 700,
               }}
             >
-              Claude AI · Ideogram · Runway ML
+              AI-Powered · Our Pipeline · Our Technology
             </span>
           </p>
         </div>

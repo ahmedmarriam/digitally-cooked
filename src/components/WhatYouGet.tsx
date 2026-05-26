@@ -38,7 +38,7 @@ const features = [
   {
     icon: "🖼️",
     title: "AI Image Prompts",
-    description: "Every post includes a detailed Ideogram-ready image prompt — just submit and get a stunning visual generated for you.",
+    description: "Every post includes a detailed AI image prompt — just submit and get a stunning visual generated for you automatically.",
     color: "#3b82f6",
     highlight: false,
   },

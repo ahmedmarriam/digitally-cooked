@@ -342,7 +342,7 @@ export default function Hero() {
               backdropFilter: "blur(10px)",
             }}
           >
-            🤖 Claude AI · Ideogram
+            🤖 AI-Powered Pipeline
           </div>
         </div>
       </div>

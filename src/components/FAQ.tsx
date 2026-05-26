@@ -5,15 +5,15 @@ import { useState } from "react";
 const faqs = [
   {
     q: "How exactly does Digitally Cooked work?",
-    a: "You fill out a brand profile form with details about your business — name, industry, tone of voice, target audience, visual style, and which platforms you post on. Our AI pipeline then processes this information using Claude AI to generate 40 fully-written posts tailored to your brand. Each post includes a hook, full caption, call-to-action, hashtag set, and an AI image prompt. The whole process takes less than 5 minutes.",
+    a: "You fill out a brand profile form with details about your business — name, industry, tone of voice, target audience, visual style, and which platforms you post on. Our AI pipeline then processes this information to generate 40 fully-written posts tailored to your brand. Each post includes a hook, full caption, call-to-action, hashtag set, and an AI image prompt. The whole process takes less than 5 minutes.",
   },
   {
     q: "Will the content actually sound like my brand?",
-    a: "Yes. The more detail you provide in your brand profile, the more closely the output mirrors your voice and style. You choose your tone (professional, casual, humorous, authoritative, etc.), your niche, and your audience — and Claude AI crafts every post to match. You can always edit the output to add a personal touch.",
+    a: "Yes. The more detail you provide in your brand profile, the more closely the output mirrors your voice and style. You choose your tone (professional, casual, humorous, authoritative, etc.), your niche, and your audience — and our AI crafts every post to match. You can always edit the output to add a personal touch.",
   },
   {
     q: "What do I get exactly?",
-    a: "Each monthly package includes: 30 calendar posts mapped day-by-day across your chosen platforms, plus 10 bonus posts (5 Story formats + 5 alternate versions). Every single post includes: a scroll-stopping hook, a full caption, a clear call-to-action, a hashtag set optimised for your platform, and an Ideogram-ready image prompt. That's 40 complete, ready-to-post pieces of content.",
+    a: "Each monthly package includes: 30 calendar posts mapped day-by-day across your chosen platforms, plus 10 bonus posts (5 Story formats + 5 alternate versions). Every single post includes: a scroll-stopping hook, a full caption, a clear call-to-action, a hashtag set optimised for your platform, and an AI-generated image prompt. That's 40 complete, ready-to-post pieces of content.",
   },
   {
     q: "Which platforms are supported?",

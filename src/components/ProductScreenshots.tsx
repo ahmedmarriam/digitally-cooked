@@ -10,7 +10,7 @@ const screens = [
     step: "Step 2",
     label: "AI Cooks Your Content",
     color: "#ec4899",
-    description: "Claude AI generates all 40 posts for your brand.",
+    description: "Our AI pipeline generates all 40 posts for your brand.",
     mockup: "processing",
   },
   {
@@ -82,7 +82,7 @@ function ProcessingMockup({ color }: { color: string }) {
       </div>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "6px" }}>AI is cooking your content...</div>
-        <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>Claude is generating your 40 posts</div>
+        <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>AI is generating your 40 posts</div>
       </div>
       {/* Progress items */}
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
