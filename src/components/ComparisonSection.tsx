@@ -1,3 +1,5 @@
+"use client";
+
 const smItems = [
   "Costs $2,000–$5,000/month",
   "Takes 2–4 weeks to onboard",

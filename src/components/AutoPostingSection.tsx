@@ -1,3 +1,5 @@
+"use client";
+
 const platformList = [
   { name: "Instagram", icon: "📸", color: "#ec4899" },
   { name: "TikTok", icon: "🎵", color: "#8b5cf6" },
