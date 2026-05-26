@@ -111,8 +111,8 @@ export default function Hero() {
               animationDelay: "0.4s",
             }}
           >
-            <a href="#pricing" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 32px" }}>
-              🍳 Start Cooking Free
+            <a href="/signup" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 32px" }}>
+              🍳 Get Started Free
             </a>
             <a href="#how-it-works" className="btn-secondary" style={{ fontSize: "1.05rem", padding: "16px 32px" }}>
               See How It Works →

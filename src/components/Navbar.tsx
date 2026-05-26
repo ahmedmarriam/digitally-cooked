@@ -111,9 +111,35 @@ export default function Navbar() {
         </nav>
 
         {/* CTA */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <a href="#pricing" className="btn-primary" style={{ padding: "10px 22px", fontSize: "0.9rem" }}>
-            Start Cooking Free →
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <a
+            href="/login"
+            className="hidden-mobile"
+            style={{
+              color: "rgba(255,255,255,0.7)",
+              textDecoration: "none",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              padding: "10px 18px",
+              borderRadius: "10px",
+              border: "1px solid rgba(139,92,246,0.25)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(139,92,246,0.6)";
+              (e.currentTarget as HTMLAnchorElement).style.background = "rgba(139,92,246,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.7)";
+              (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(139,92,246,0.25)";
+              (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+            }}
+          >
+            Log In
+          </a>
+          <a href="/signup" className="btn-primary hidden-mobile" style={{ padding: "10px 22px", fontSize: "0.9rem" }}>
+            Get Started →
           </a>
           {/* Mobile menu button */}
           <button
@@ -169,9 +195,14 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
-          <a href="#pricing" className="btn-primary" style={{ marginTop: "16px", width: "100%", textAlign: "center" }}>
-            Start Cooking Free →
-          </a>
+          <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+            <a href="/login" style={{ flex: 1, textAlign: "center", padding: "12px", borderRadius: "10px", border: "1px solid rgba(139,92,246,0.3)", color: "rgba(255,255,255,0.8)", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem" }}>
+              Log In
+            </a>
+            <a href="/signup" className="btn-primary" style={{ flex: 1, textAlign: "center" }}>
+              Get Started →
+            </a>
+          </div>
         </div>
       )}
 
