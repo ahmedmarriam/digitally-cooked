@@ -9,15 +9,15 @@ import { useEffect, useRef } from "react";
  */
 const SCENES = [
   {
-    // Hero — galaxy / embers / transformation energy
-    url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80",
+    // Hero — phone with social media feed, dark background, on-brand for Digitally Cooked
+    url: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?auto=format&fit=crop&w=1920&q=80",
   },
   {
-    // How It Works / AI — abstract neural / data streams
-    url: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&w=1920&q=80",
+    // How It Works / AI — dark matrix/binary code, clearly digital, doesn't fight text
+    url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1920&q=80",
   },
   {
-    // Platforms / Social — vibrant colorful digital world
+    // Platforms / Social — vibrant colorful gradient, social media energy
     url: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1920&q=80",
   },
   {
@@ -130,7 +130,7 @@ export default function ParallaxBackground() {
         style={{
           position:      "absolute",
           inset:         0,
-          background:    "linear-gradient(to bottom, rgba(4,0,15,0.76) 0%, rgba(4,0,15,0.68) 40%, rgba(4,0,15,0.76) 100%)",
+          background:    "linear-gradient(to bottom, rgba(4,0,15,0.88) 0%, rgba(4,0,15,0.82) 40%, rgba(4,0,15,0.90) 100%)",
           pointerEvents: "none",
         }}
       />
