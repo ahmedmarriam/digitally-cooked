@@ -16,10 +16,14 @@ import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import BirdMascot from "@/components/BirdMascot";
+import ParallaxBackground from "@/components/ParallaxBackground";
 
 export default function Home() {
   return (
     <>
+      {/* Parallax background — 5 scenes crossfade as you scroll */}
+      <ParallaxBackground />
+
       {/* Phoenix mascot — flies in top-right, spreads wings on scroll, glides to bottom-left */}
       <BirdMascot />
 

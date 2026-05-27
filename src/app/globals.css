@@ -26,10 +26,11 @@
 
 html {
   scroll-behavior: smooth;
+  background: #04000f; /* fallback if parallax layer not yet mounted */
 }
 
 body {
-  background-color: var(--dc-bg);
+  background-color: transparent; /* ParallaxBackground handles the page background */
   color: #ffffff;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
