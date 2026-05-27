@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED = ["/brand-profile", "/processing", "/dashboard", "/calendar", "/settings"];
+const PROTECTED = ["/brand-profile", "/processing", "/dashboard", "/calendar", "/settings", "/brand-kit"];
 const AUTH_ONLY = ["/login", "/signup"];
 
 export function middleware(request: NextRequest) {
@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/brand-profile", "/processing", "/dashboard", "/calendar", "/settings", "/login", "/signup"],
+  matcher: ["/brand-profile", "/processing", "/dashboard", "/calendar", "/settings", "/brand-kit", "/login", "/signup"],
 };

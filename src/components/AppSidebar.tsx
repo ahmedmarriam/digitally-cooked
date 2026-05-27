@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: "▦" },
   { label: "Calendar", href: "/calendar", icon: "◫" },
+  { label: "Brand Kit", href: "/brand-kit", icon: "✦" },
   { label: "Settings", href: "/settings", icon: "⚙" },
 ];
 

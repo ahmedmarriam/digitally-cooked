@@ -104,6 +104,9 @@ export default function DashboardPage() {
             <div style={{ padding: "8px 16px", borderRadius: "10px", background: "rgba(123,47,255,0.12)", border: "1px solid rgba(123,47,255,0.25)", color: "#a78bfa", fontSize: "0.82rem", fontWeight: 600 }}>
               ✦ {SAMPLE_POSTS.length} Posts Generated
             </div>
+            <a href="/brand-kit" style={{ padding: "8px 16px", borderRadius: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(241,241,241,0.7)", fontSize: "0.82rem", fontWeight: 600, textDecoration: "none" }}>
+              ✦ Build Brand Kit
+            </a>
             <a href="/brand-profile" style={{ padding: "8px 16px", borderRadius: "10px", background: "linear-gradient(135deg, #7B2FFF, #ec4899)", color: "#fff", fontSize: "0.82rem", fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}>
               🍳 Regenerate
             </a>

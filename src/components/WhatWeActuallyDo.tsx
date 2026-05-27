@@ -105,15 +105,18 @@ export default function WhatWeActuallyDo() {
                 transition: "transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
                 cursor: "default",
               }}
-              onMouseEnter={(e) => {
+              onMouseMove={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
-                el.style.transform = "translateY(-5px)";
+                const rect = el.getBoundingClientRect();
+                const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+                const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+                el.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${y * -8}deg) translateZ(12px)`;
                 el.style.borderColor = `${color}50`;
-                el.style.boxShadow = `0 16px 50px ${color}15`;
+                el.style.boxShadow = `0 20px 60px ${color}20`;
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
-                el.style.transform = "translateY(0)";
+                el.style.transform = "perspective(800px) rotateY(0deg) rotateX(0deg) translateZ(0)";
                 el.style.borderColor = `${color}20`;
                 el.style.boxShadow = "none";
               }}
