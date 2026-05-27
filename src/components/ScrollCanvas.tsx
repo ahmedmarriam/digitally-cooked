@@ -2,276 +2,160 @@
 
 import { useEffect, useRef } from "react";
 
-/* ── constants ─────────────────────────────────────────────── */
-const PLATFORM_ORBS = [
-  { color: 0xec4899, radius: 6,  speed: 0.35, startAngle: 0               }, // Instagram
-  { color: 0x8b5cf6, radius: 8,  speed: 0.22, startAngle: Math.PI * 0.4  }, // TikTok
-  { color: 0x60a5fa, radius: 5,  speed: 0.28, startAngle: Math.PI        }, // LinkedIn
-  { color: 0x818cf8, radius: 9,  speed: 0.18, startAngle: Math.PI * 1.5  }, // Facebook
-  { color: 0xf87171, radius: 4.5,speed: 0.42, startAngle: Math.PI * 0.7  }, // YouTube
-];
+interface Node {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  pulse: number;
+  pulseSpeed: number;
+  colorVariant: number; // 0 = purple, 1 = pink accent
+}
 
-const PURPLE  = [0.48, 0.18, 1.0 ] as const;
-const CORAL   = [1.0,  0.42, 0.42] as const;
-const LAVEND  = [0.65, 0.55, 0.98] as const;
-const WHITE   = [1.0,  1.0,  1.0 ] as const;
-const GREEN   = [0.2,  0.9,  0.5 ] as const;
-const GOLD    = [1.0,  0.84, 0.2 ] as const;
-const PALETTE = [PURPLE, CORAL, LAVEND, WHITE] as const;
-
-const smoothstep = (t: number) => {
-  const c = Math.min(1, Math.max(0, t));
-  return c * c * (3 - 2 * c);
-};
-
-const lerpArrays = (a: Float32Array, b: Float32Array, t: number, out: Float32Array) => {
-  const e = smoothstep(t);
-  for (let i = 0; i < out.length; i++) out[i] = a[i] + (b[i] - a[i]) * e;
-};
-
-/* ── component ─────────────────────────────────────────────── */
 export default function ScrollCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     let rafId: number;
-    let renderer: import("three").WebGLRenderer;
-    let onScrollFn: () => void;
-    let onMouseFn: (e: MouseEvent) => void;
-    let onResizeFn: () => void;
+    let mouseX = -9999;
+    let mouseY = -9999;
 
-    (async () => {
-      const THREE = await import("three");
+    /* ── resize ─────────────────────────────────────────────── */
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
 
-      /* ── renderer ────────────────────────────────────────── */
-      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-      renderer.setClearColor(0x000000, 0);
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    const onResize = () => resize();
+    const onMouse = (e: MouseEvent) => { mouseX = e.clientX; mouseY = e.clientY; };
+    const onMouseLeave = () => { mouseX = -9999; mouseY = -9999; };
 
-      /* ── scene / camera ──────────────────────────────────── */
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
-      camera.position.z = 14;
+    window.addEventListener("resize", onResize);
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    document.addEventListener("mouseleave", onMouseLeave);
 
-      /* ── particle count (mobile-aware) ───────────────────── */
-      const isMobile = window.innerWidth < 768;
-      const COUNT = isMobile ? 180 : 500;
+    /* ── nodes ──────────────────────────────────────────────── */
+    const isMobile = window.innerWidth < 768;
+    const COUNT = isMobile ? 50 : 105;
+    const MAX_DIST = isMobile ? 140 : 175;
+    const MOUSE_DIST = 130;
 
-      /* ── helper: generate positions ──────────────────────── */
-      const heroPositions     = new Float32Array(COUNT * 3);
-      const convergePositions = new Float32Array(COUNT * 3);
-      const gridPositions     = new Float32Array(COUNT * 3);
-      const chartPositions    = new Float32Array(COUNT * 3);
-      const currentPositions  = new Float32Array(COUNT * 3);
-      const colors            = new Float32Array(COUNT * 3);
+    const nodes: Node[] = Array.from({ length: COUNT }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      vx: (Math.random() - 0.5) * 0.22,
+      vy: (Math.random() - 0.5) * 0.22,
+      r: Math.random() * 1.1 + 0.55,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.007 + Math.random() * 0.011,
+      colorVariant: Math.random() < 0.85 ? 0 : 1,
+    }));
 
-      // Hero: sphere cloud
-      for (let i = 0; i < COUNT; i++) {
-        const theta = Math.random() * Math.PI * 2;
-        const phi   = Math.acos(2 * Math.random() - 1);
-        const r     = 3.5 + Math.random() * 8;
-        heroPositions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-        heroPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-        heroPositions[i * 3 + 2] = r * Math.cos(phi) - 1;
-      }
+    let lastTime = 0;
 
-      // Converge: tight cluster at centre
-      for (let i = 0; i < COUNT; i++) {
-        convergePositions[i * 3]     = (Math.random() - 0.5) * 1.8;
-        convergePositions[i * 3 + 1] = (Math.random() - 0.5) * 1.8;
-        convergePositions[i * 3 + 2] = (Math.random() - 0.5) * 1.8;
-      }
+    /* ── animation loop ─────────────────────────────────────── */
+    const animate = (time: number) => {
+      rafId = requestAnimationFrame(animate);
+      const dt = Math.min((time - lastTime) / 16.67, 2.5);
+      lastTime = time;
 
-      // Grid: post-card lattice
-      const cols = Math.ceil(Math.sqrt(COUNT * 1.6));
-      const rows = Math.ceil(COUNT / cols);
-      for (let i = 0; i < COUNT; i++) {
-        const c = i % cols;
-        const r = Math.floor(i / cols);
-        gridPositions[i * 3]     = (c / (cols - 1) - 0.5) * 18;
-        gridPositions[i * 3 + 1] = -(r / (rows - 1) - 0.5) * 11;
-        gridPositions[i * 3 + 2] = (Math.random() - 0.5) * 0.8;
-      }
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
 
-      // Chart: 5 rising bars
-      const BARS = 5;
-      const barHeights = [4, 6.5, 9, 7, 11];
-      for (let i = 0; i < COUNT; i++) {
-        const bar    = i % BARS;
-        const frac   = Math.floor(i / BARS) / Math.floor(COUNT / BARS);
-        chartPositions[i * 3]     = (bar / (BARS - 1) - 0.5) * 12;
-        chartPositions[i * 3 + 1] = -6 + frac * barHeights[bar] + (Math.random() - 0.5) * 0.4;
-        chartPositions[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
-      }
+      /* update positions */
+      for (const n of nodes) {
+        n.pulse += n.pulseSpeed;
+        n.x += n.vx * dt;
+        n.y += n.vy * dt;
 
-      // Assign vertex colours (mix of purple/coral/lavender/white)
-      for (let i = 0; i < COUNT; i++) {
-        const c = PALETTE[i % PALETTE.length];
-        colors[i * 3]     = c[0];
-        colors[i * 3 + 1] = c[1];
-        colors[i * 3 + 2] = c[2];
-      }
-
-      currentPositions.set(heroPositions);
-
-      /* ── geometry + points ───────────────────────────────── */
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.BufferAttribute(currentPositions, 3));
-      geo.setAttribute("color",    new THREE.BufferAttribute(colors, 3));
-
-      const mat = new THREE.PointsMaterial({
-        size: isMobile ? 0.065 : 0.09,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.85,
-        sizeAttenuation: true,
-      });
-
-      const points = new THREE.Points(geo, mat);
-      scene.add(points);
-
-      /* ── platform orbs ───────────────────────────────────── */
-      const orbGroups: { group: import("three").Group; angle: number; radius: number; speed: number }[] = [];
-
-      PLATFORM_ORBS.forEach((data) => {
-        const group = new THREE.Group();
-
-        // inner sphere
-        const inner = new THREE.Mesh(
-          new THREE.SphereGeometry(0.18, 12, 12),
-          new THREE.MeshBasicMaterial({ color: data.color })
-        );
-        group.add(inner);
-
-        // glow ring
-        const glow = new THREE.Mesh(
-          new THREE.SphereGeometry(0.42, 12, 12),
-          new THREE.MeshBasicMaterial({ color: data.color, transparent: true, opacity: 0.12 })
-        );
-        group.add(glow);
-
-        scene.add(group);
-        orbGroups.push({ group, angle: data.startAngle, radius: data.radius, speed: data.speed });
-      });
-
-      /* ── centre glow ─────────────────────────────────────── */
-      const centreGlow = new THREE.Mesh(
-        new THREE.SphereGeometry(1.2, 16, 16),
-        new THREE.MeshBasicMaterial({ color: 0x7b2fff, transparent: true, opacity: 0 })
-      );
-      scene.add(centreGlow);
-
-      /* ── scroll + mouse state ────────────────────────────── */
-      let scrollProgress = 0;
-      let targetCamX = 0, targetCamY = 0;
-      let camX = 0, camY = 0;
-      const clock = new THREE.Clock();
-
-      onScrollFn = () => {
-        const maxScroll = document.body.scrollHeight - window.innerHeight;
-        scrollProgress = maxScroll > 0 ? Math.min(1, window.scrollY / maxScroll) : 0;
-      };
-      onMouseFn = (e: MouseEvent) => {
-        targetCamX = (e.clientX / window.innerWidth  - 0.5) * 2.5;
-        targetCamY = (e.clientY / window.innerHeight - 0.5) * 1.5;
-      };
-      onResizeFn = () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-      };
-
-      window.addEventListener("scroll",    onScrollFn, { passive: true });
-      window.addEventListener("mousemove", onMouseFn,  { passive: true });
-      window.addEventListener("resize",    onResizeFn, { passive: true });
-
-      /* ── colour interpolation helpers ───────────────────────*/
-      const heroColours    = new Float32Array(colors);                    // purple/coral/white
-      const gridColours    = new Float32Array(COUNT * 3);                 // platform colours
-      const chartColours   = new Float32Array(COUNT * 3);                 // green/gold
-      const currentColours = new Float32Array(colors);
-
-      const gridPlatformColors = [
-        [0.93, 0.28, 0.60], // pink
-        [0.55, 0.36, 0.98], // purple
-        [0.38, 0.64, 0.98], // blue
-        [0.51, 0.51, 0.97], // indigo
-        [0.97, 0.53, 0.53], // coral-red
-      ];
-      for (let i = 0; i < COUNT; i++) {
-        const c = gridPlatformColors[i % gridPlatformColors.length];
-        gridColours[i * 3] = c[0]; gridColours[i * 3 + 1] = c[1]; gridColours[i * 3 + 2] = c[2];
-      }
-      for (let i = 0; i < COUNT; i++) {
-        const c = i % 2 === 0 ? GREEN : GOLD;
-        chartColours[i * 3] = c[0]; chartColours[i * 3 + 1] = c[1]; chartColours[i * 3 + 2] = c[2];
-      }
-
-      /* ── animation loop ──────────────────────────────────── */
-      const animate = () => {
-        rafId = requestAnimationFrame(animate);
-        const delta = clock.getDelta();
-        const sp    = scrollProgress;
-
-        /* --- particle positions by phase --- */
-        if (sp < 0.18) {
-          currentPositions.set(heroPositions);
-          currentColours.set(heroColours);
-        } else if (sp < 0.38) {
-          lerpArrays(heroPositions,     convergePositions, (sp - 0.18) / 0.20, currentPositions);
-          lerpArrays(heroColours,       heroColours,       0,                   currentColours);
-        } else if (sp < 0.62) {
-          lerpArrays(convergePositions, gridPositions,     (sp - 0.38) / 0.24, currentPositions);
-          lerpArrays(heroColours,       gridColours,       (sp - 0.38) / 0.24, currentColours);
-        } else {
-          lerpArrays(gridPositions,     chartPositions,    (sp - 0.62) / 0.38, currentPositions);
-          lerpArrays(gridColours,       chartColours,      (sp - 0.62) / 0.38, currentColours);
+        /* mouse repel */
+        const dx = n.x - mouseX;
+        const dy = n.y - mouseY;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < MOUSE_DIST && d > 1) {
+          const f = ((MOUSE_DIST - d) / MOUSE_DIST) * 0.45;
+          n.vx += (dx / d) * f * dt;
+          n.vy += (dy / d) * f * dt;
         }
 
-        geo.attributes.position.needsUpdate = true;
-        geo.attributes.color.needsUpdate    = true;
+        /* dampen + small random drift */
+        n.vx *= 0.993;
+        n.vy *= 0.993;
+        if (Math.abs(n.vx) < 0.07) n.vx += (Math.random() - 0.5) * 0.012;
+        if (Math.abs(n.vy) < 0.07) n.vy += (Math.random() - 0.5) * 0.012;
 
-        /* --- orb orbiting --- */
-        const orbVisible = sp < 0.35;
-        const orbScale   = orbVisible ? Math.max(0, 1 - (sp - 0.20) / 0.15) : 0;
-        orbGroups.forEach((o) => {
-          o.angle += o.speed * delta;
-          o.group.position.x  = Math.cos(o.angle) * o.radius;
-          o.group.position.z  = Math.sin(o.angle) * o.radius;
-          o.group.position.y  = Math.sin(o.angle * 1.7) * 1.8;
-          o.group.scale.setScalar(orbScale);
-        });
+        /* wrap edges */
+        if (n.x < -30) n.x = w + 30;
+        else if (n.x > w + 30) n.x = -30;
+        if (n.y < -30) n.y = h + 30;
+        else if (n.y > h + 30) n.y = -30;
+      }
 
-        /* --- centre glow on converge --- */
-        const glowOpacity = smoothstep(Math.min(1, Math.max(0, (sp - 0.28) / 0.12)));
-        (centreGlow.material as import("three").MeshBasicMaterial).opacity = glowOpacity * 0.25;
+      /* draw connections */
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          // quick bbox cull
+          if (Math.abs(dx) > MAX_DIST || Math.abs(dy) > MAX_DIST) continue;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < MAX_DIST) {
+            const alpha = (1 - d / MAX_DIST) * 0.1;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(139,92,246,${alpha.toFixed(3)})`;
+            ctx.lineWidth = 0.65;
+            ctx.stroke();
+          }
+        }
+      }
 
-        /* --- particle point rotation --- */
-        points.rotation.y += delta * 0.04 * (1 - Math.min(1, sp / 0.4));
+      /* draw nodes */
+      for (const n of nodes) {
+        const pulseFactor = 0.75 + Math.sin(n.pulse) * 0.25;
+        const baseAlpha = n.colorVariant === 0 ? 0.28 : 0.18;
+        const alpha = baseAlpha * pulseFactor;
+        const radius = n.r * (0.92 + Math.sin(n.pulse) * 0.08);
 
-        /* --- camera parallax --- */
-        camX += (targetCamX - camX) * 0.04;
-        camY += (-targetCamY - camY) * 0.04;
-        camera.position.x = camX;
-        camera.position.y = camY + 0;
-        camera.lookAt(0, 0, 0);
+        /* subtle glow behind large nodes */
+        if (n.r > 1.3) {
+          const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, radius * 5);
+          grad.addColorStop(0, n.colorVariant === 0
+            ? `rgba(139,92,246,${(alpha * 0.22).toFixed(3)})`
+            : `rgba(236,72,153,${(alpha * 0.18).toFixed(3)})`);
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, radius * 5, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+        }
 
-        renderer.render(scene, camera);
-      };
+        /* node dot */
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = n.colorVariant === 0
+          ? `rgba(139,92,246,${alpha.toFixed(3)})`
+          : `rgba(236,72,153,${alpha.toFixed(3)})`;
+        ctx.fill();
+      }
+    };
 
-      animate();
-    })();
+    rafId = requestAnimationFrame(animate);
 
     return () => {
       cancelAnimationFrame(rafId);
-      renderer?.dispose();
-      if (onScrollFn)  window.removeEventListener("scroll",    onScrollFn);
-      if (onMouseFn)   window.removeEventListener("mousemove", onMouseFn);
-      if (onResizeFn)  window.removeEventListener("resize",    onResizeFn);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("mousemove", onMouse);
+      document.removeEventListener("mouseleave", onMouseLeave);
     };
   }, []);
 
