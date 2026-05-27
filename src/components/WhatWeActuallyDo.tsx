@@ -85,6 +85,15 @@ export default function WhatWeActuallyDo() {
           </p>
         </div>
 
+        <style>{`
+          @keyframes featureFloat0 { 0%,100%{transform:translateY(0px)}   50%{transform:translateY(-9px)} }
+          @keyframes featureFloat1 { 0%,100%{transform:translateY(-5px)}  50%{transform:translateY(7px)}  }
+          @keyframes featureFloat2 { 0%,100%{transform:translateY(0px)}   50%{transform:translateY(-11px)}}
+          @keyframes featureFloat3 { 0%,100%{transform:translateY(-3px)}  50%{transform:translateY(8px)}  }
+          @keyframes featureFloat4 { 0%,100%{transform:translateY(0px)}   50%{transform:translateY(-7px)} }
+          @keyframes featureFloat5 { 0%,100%{transform:translateY(-6px)}  50%{transform:translateY(6px)}  }
+        `}</style>
+
         {/* Benefits grid */}
         <div
           style={{
@@ -93,7 +102,7 @@ export default function WhatWeActuallyDo() {
             gap: "20px",
           }}
         >
-          {benefits.map(({ icon, title, description, color }) => (
+          {benefits.map(({ icon, title, description, color }, bIdx) => (
             <div
               key={title}
               style={{
@@ -102,23 +111,26 @@ export default function WhatWeActuallyDo() {
                 background: "rgba(10,10,10,0.8)",
                 border: `1px solid ${color}20`,
                 backdropFilter: "blur(10px)",
-                transition: "transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
                 cursor: "default",
+                animation: `featureFloat${bIdx} ${4.5 + bIdx * 0.6}s ease-in-out infinite`,
+                transition: "border-color 0.25s, box-shadow 0.25s",
               }}
               onMouseMove={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
                 const rect = el.getBoundingClientRect();
-                const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-                const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-                el.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${y * -8}deg) translateZ(12px)`;
-                el.style.borderColor = `${color}50`;
-                el.style.boxShadow = `0 20px 60px ${color}20`;
+                const x = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
+                const y = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
+                el.style.animation  = "none";
+                el.style.transform  = `perspective(800px) rotateY(${x * 8}deg) rotateX(${y * -8}deg) translateY(-12px)`;
+                el.style.borderColor = `${color}55`;
+                el.style.boxShadow  = `0 20px 60px ${color}20`;
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLDivElement;
-                el.style.transform = "perspective(800px) rotateY(0deg) rotateX(0deg) translateZ(0)";
+                el.style.transform   = "";
                 el.style.borderColor = `${color}20`;
-                el.style.boxShadow = "none";
+                el.style.boxShadow   = "none";
+                el.style.animation   = `featureFloat${bIdx} ${4.5 + bIdx * 0.6}s ease-in-out infinite`;
               }}
             >
               {/* Icon */}

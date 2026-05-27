@@ -112,6 +112,12 @@ export default function Pricing() {
           </p>
         </div>
 
+        <style>{`
+          @keyframes cardFloat0 { 0%,100%{transform:translateY(0px)}  50%{transform:translateY(-9px)} }
+          @keyframes cardFloat1 { 0%,100%{transform:translateY(-5px)} 50%{transform:translateY(7px)}  }
+          @keyframes cardFloat2 { 0%,100%{transform:translateY(0px)}  50%{transform:translateY(-11px)}}
+        `}</style>
+
         {/* Cards */}
         <div
           style={{
@@ -121,7 +127,7 @@ export default function Pricing() {
             alignItems: "start",
           }}
         >
-          {tiers.map((tier) => (
+          {tiers.map((tier, tIdx) => (
             <div
               key={tier.name}
               style={{
@@ -133,14 +139,27 @@ export default function Pricing() {
                   : "rgba(10, 10, 10, 0.9)",
                 border: `1.5px solid ${tier.highlight ? tier.color + "50" : "rgba(139,92,246,0.2)"}`,
                 backdropFilter: "blur(14px)",
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                transition: "box-shadow 0.3s ease",
                 boxShadow: tier.highlight
                   ? `0 0 60px ${tier.color}20, 0 30px 80px rgba(0,0,0,0.4)`
                   : "none",
-                transform: tier.highlight ? "scale(1.03)" : "scale(1)",
+                animation: `cardFloat${tIdx} ${4 + tIdx * 0.8}s ease-in-out infinite`,
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = tier.highlight ? "scale(1.05)" : "translateY(-5px)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = tier.highlight ? "scale(1.03)" : "scale(1)"; }}
+              onMouseMove={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                const rect = el.getBoundingClientRect();
+                const x = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
+                const y = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
+                el.style.animation = "none";
+                el.style.transform = `perspective(900px) rotateY(${x * 7}deg) rotateX(${y * -7}deg) translateY(-12px)`;
+                el.style.boxShadow = `0 24px 60px ${tier.color}30`;
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                el.style.transform = "";
+                el.style.boxShadow = tier.highlight ? `0 0 60px ${tier.color}20, 0 30px 80px rgba(0,0,0,0.4)` : "none";
+                el.style.animation = `cardFloat${tIdx} ${4 + tIdx * 0.8}s ease-in-out infinite`;
+              }}
             >
               {/* Badge */}
               {tier.badge && (

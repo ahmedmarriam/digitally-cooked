@@ -15,12 +15,16 @@ import Pricing from "@/components/Pricing";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
+import CanvasWrapper from "@/components/CanvasWrapper";
 
 export default function Home() {
   return (
     <>
+      {/* Fixed 3D canvas behind everything */}
+      <CanvasWrapper />
+
       <Navbar />
-      <main>
+      <main style={{ position: "relative", zIndex: 1 }}>
         <Hero />
         <SocialProofBar />
         <WhatWeActuallyDo />

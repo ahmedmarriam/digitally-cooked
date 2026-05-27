@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import HeroBackground from "./HeroBackground";
 
 export default function Hero() {
   const visualRef = useRef<HTMLDivElement>(null);
@@ -27,14 +26,11 @@ export default function Hero() {
         paddingTop: "100px",
         paddingBottom: "80px",
         overflow: "hidden",
-        background: "#0F0E1A",
+        background: "transparent",  /* canvas shows through */
       }}
     >
-      {/* Animated background — floating cards, particles, grid */}
-      <HeroBackground />
-
-      {/* Dark overlay so text stays crisp */}
-      <div style={{ position: "absolute", inset: 0, background: "rgba(15,14,26,0.55)", zIndex: 1, pointerEvents: "none" }} />
+      {/* Gradient overlay so headline stays readable over the 3D canvas */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,14,26,0.55) 0%, rgba(15,14,26,0.3) 60%, transparent 100%)", zIndex: 1, pointerEvents: "none" }} />
 
       <div
         style={{
