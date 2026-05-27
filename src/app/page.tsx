@@ -15,13 +15,13 @@ import Pricing from "@/components/Pricing";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
-import CanvasWrapper from "@/components/CanvasWrapper";
+import BirdMascot from "@/components/BirdMascot";
 
 export default function Home() {
   return (
     <>
-      {/* Fixed 3D canvas behind everything */}
-      <CanvasWrapper />
+      {/* Phoenix mascot — flies in top-right, spreads wings on scroll, glides to bottom-left */}
+      <BirdMascot />
 
       <Navbar />
       <main style={{ position: "relative", zIndex: 1 }}>
