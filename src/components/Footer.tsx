@@ -166,28 +166,6 @@ export default function Footer() {
           <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.82rem" }}>
             © {new Date().getFullYear()} Digitally Cooked. All rights reserved.
           </p>
-          <p
-            style={{
-              color: "rgba(255,255,255,0.2)",
-              fontSize: "0.78rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            Powered by{" "}
-            <span
-              style={{
-                background: "linear-gradient(90deg, #a78bfa, #ec4899)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                fontWeight: 700,
-              }}
-            >
-              AI-Powered · Our Pipeline · Our Technology
-            </span>
-          </p>
         </div>
       </div>
 

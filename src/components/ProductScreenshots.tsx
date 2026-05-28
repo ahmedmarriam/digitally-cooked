@@ -55,7 +55,7 @@ function FormMockup({ color }: { color: string }) {
       </div>
       {/* PLACEHOLDER NOTE */}
       <div style={{ textAlign: "center", fontSize: "0.65rem", color: "rgba(255,255,255,0.15)", fontStyle: "italic" }}>
-        — Replace with real Bubble.io form screenshot —
+        — App screenshot coming soon —
       </div>
     </div>
   );
@@ -102,7 +102,7 @@ function ProcessingMockup({ color }: { color: string }) {
         ))}
       </div>
       <div style={{ textAlign: "center", fontSize: "0.65rem", color: "rgba(255,255,255,0.15)", fontStyle: "italic" }}>
-        — Replace with real processing screen screenshot —
+        — App screenshot coming soon —
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }`}</style>
     </div>
@@ -155,7 +155,7 @@ function DashboardMockup({ color }: { color: string }) {
         </div>
       ))}
       <div style={{ textAlign: "center", fontSize: "0.65rem", color: "rgba(255,255,255,0.15)", fontStyle: "italic" }}>
-        — Replace with real dashboard screenshot —
+        — App screenshot coming soon —
       </div>
     </div>
   );

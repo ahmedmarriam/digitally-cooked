@@ -1,5 +1,13 @@
 "use client";
 
+import { useState } from "react";
+
+const PLAN_KEYS: Record<string, string> = {
+  "Start Cooking":    "starter",
+  "Start Growing":    "growth",
+  "Scale Your Agency":"agency",
+};
+
 const tiers = [
   {
     name: "Starter",
@@ -11,7 +19,7 @@ const tiers = [
     features: [
       "1 Brand Profile",
       "40 AI-generated posts/month",
-      "Auto-post to 3 platforms",
+      "Auto-post to Instagram, TikTok & Facebook",
       "Hooks, captions, CTAs, hashtags",
       "AI-generated visuals for every post",
       "Monthly content calendar",
@@ -32,7 +40,7 @@ const tiers = [
     features: [
       "3 Brand Profiles",
       "40 posts per brand/month",
-      "Auto-post to all 15 platforms",
+      "All 5 platforms + auto-post to 15",
       "Hooks, captions, CTAs, hashtags",
       "AI-generated visuals for every post",
       "Full analytics dashboard",
@@ -53,7 +61,7 @@ const tiers = [
     features: [
       "10 Brand Profiles",
       "40 posts per brand/month",
-      "Auto-post to all 15 platforms",
+      "All 5 platforms + auto-post to 15",
       "White-label output",
       "AI-generated visuals for every post",
       "Full analytics dashboard",
@@ -66,6 +74,33 @@ const tiers = [
 ];
 
 export default function Pricing() {
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [stripeError, setStripeError] = useState("");
+
+  const handleCheckout = async (ctaLabel: string) => {
+    const plan = PLAN_KEYS[ctaLabel];
+    if (!plan) return;
+    setStripeError("");
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setStripeError(data.error ?? "Checkout failed. Please try again.");
+        setLoadingPlan(null);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setStripeError("Something went wrong. Please try again.");
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <section
       id="pricing"
@@ -242,25 +277,29 @@ export default function Pricing() {
               </ul>
 
               {/* CTA */}
-              <a
-                href={tier.ctaHref}
+              <button
+                onClick={() => handleCheckout(tier.cta)}
+                disabled={loadingPlan !== null}
                 style={
                   tier.highlight
                     ? {
                         display: "block",
+                        width: "100%",
                         textAlign: "center",
                         padding: "16px",
                         borderRadius: "14px",
-                        background: `linear-gradient(135deg, ${tier.color}, #8b5cf6)`,
+                        background: loadingPlan === PLAN_KEYS[tier.cta] ? "rgba(139,92,246,0.5)" : `linear-gradient(135deg, ${tier.color}, #8b5cf6)`,
                         color: "#fff",
                         fontWeight: 700,
                         fontSize: "1rem",
-                        textDecoration: "none",
+                        border: "none",
+                        cursor: loadingPlan ? "not-allowed" : "pointer",
                         boxShadow: `0 6px 25px ${tier.color}45`,
                         transition: "opacity 0.2s ease, transform 0.2s ease",
                       }
                     : {
                         display: "block",
+                        width: "100%",
                         textAlign: "center",
                         padding: "16px",
                         borderRadius: "14px",
@@ -269,18 +308,25 @@ export default function Pricing() {
                         color: tier.color,
                         fontWeight: 700,
                         fontSize: "1rem",
-                        textDecoration: "none",
+                        cursor: loadingPlan ? "not-allowed" : "pointer",
                         transition: "all 0.2s ease",
                       }
                 }
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "0.85"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "1"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)"; }}
+                onMouseEnter={(e) => { if (!loadingPlan) { (e.currentTarget as HTMLButtonElement).style.opacity = "0.85"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; }}}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; }}
               >
-                {tier.cta} →
-              </a>
+                {loadingPlan === PLAN_KEYS[tier.cta] ? "Redirecting..." : `${tier.cta} →`}
+              </button>
             </div>
           ))}
         </div>
+
+        {/* Stripe error */}
+        {stripeError && (
+          <div style={{ textAlign: "center", marginTop: "24px", padding: "12px 20px", borderRadius: "10px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", fontSize: "0.88rem" }}>
+            {stripeError}
+          </div>
+        )}
 
         {/* Trust note */}
         <div style={{ textAlign: "center", marginTop: "48px", color: "rgba(255,255,255,0.35)", fontSize: "0.85rem" }}>

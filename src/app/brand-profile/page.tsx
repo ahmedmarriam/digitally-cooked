@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const WEBHOOK_URL = "https://hook.us2.make.com/aba6mfll6svmbqt1zdxrya28p6t4ac1d";
+// Webhook URL is handled server-side via /api/brand-profile/submit
 
 const PLATFORMS = ["Instagram", "TikTok", "Facebook", "LinkedIn", "YouTube"];
 
@@ -49,12 +49,17 @@ export default function BrandProfilePage() {
     setError("");
     setLoading(true);
     try {
-      await fetch(WEBHOOK_URL, {
+      const res = await fetch("/api/brand-profile/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, logoFileName: logoName }),
-        mode: "no-cors",
       });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Failed to submit. Please try again.");
+        setLoading(false);
+        return;
+      }
       router.push("/processing");
     } catch {
       setError("Failed to submit. Please try again.");

@@ -107,7 +107,7 @@ export default function Hero() {
           >
             {[
               { number: "40", label: "Posts per Month" },
-              { number: "15", label: "Platforms Supported" },
+              { number: "5", label: "Platforms Supported" },
               { number: "<5", label: "Minutes to Generate" },
             ].map(({ number, label }) => (
               <div key={label}>

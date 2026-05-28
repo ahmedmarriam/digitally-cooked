@@ -3,7 +3,7 @@
 import { useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 
-const PLATFORMS = ["Instagram", "TikTok", "LinkedIn", "Twitter/X", "Facebook", "YouTube"] as const;
+const PLATFORMS = ["Instagram", "TikTok", "LinkedIn", "Facebook", "YouTube"] as const;
 type Platform = (typeof PLATFORMS)[number];
 
 interface Post {
@@ -19,7 +19,7 @@ const SAMPLE_POSTS: Post[] = [
   { day: 1, platform: "Instagram", hook: "You're posting every day and still getting zero engagement. Here's why.", caption: "Most brands flood their feed with content that talks AT their audience instead of WITH them. The fix? Lead with a problem your ideal customer lies awake thinking about — then solve it in the caption.", cta: "Save this for your next content planning session 📌", hashtags: ["#ContentStrategy", "#InstagramGrowth", "#SocialMediaTips", "#BrandBuilding"] },
   { day: 2, platform: "LinkedIn", hook: "I doubled our organic reach in 30 days without spending a single dollar on ads.", caption: "The secret wasn't posting more. It was posting smarter. We stopped chasing trends and started owning one specific topic. Consistency + niche depth = algorithm love.", cta: "Drop a 🔥 if you want the full breakdown.", hashtags: ["#LinkedInGrowth", "#MarketingStrategy", "#OrganicMarketing", "#ContentMarketing"] },
   { day: 3, platform: "TikTok", hook: "POV: Your content finally stops the scroll 👀", caption: "The first 2 seconds are everything on TikTok. If your hook doesn't spark curiosity, fear, or joy — you've already lost them. Here are 5 hook formulas that work in ANY niche.", cta: "Follow for daily content strategies that actually convert.", hashtags: ["#TikTokMarketing", "#ContentCreator", "#GrowthHacking", "#SocialMediaStrategy"] },
-  { day: 4, platform: "Twitter/X", hook: "Unpopular opinion: Consistency beats creativity every single time.", caption: "The brands winning on social media aren't the most creative ones. They're the most consistent ones. Show up, deliver value, repeat. The algorithm rewards presence over perfection.", cta: "Retweet if you agree. Reply if you don't — I'll change your mind.", hashtags: ["#MarketingTips", "#ContentCreation", "#GrowthMindset"] },
+  { day: 4, platform: "Facebook", hook: "Unpopular opinion: Consistency beats creativity every single time.", caption: "The brands winning on social media aren't the most creative ones. They're the most consistent ones. Show up, deliver value, repeat. The algorithm rewards presence over perfection.", cta: "Share this with someone who needs the reminder.", hashtags: ["#MarketingTips", "#ContentCreation", "#GrowthMindset"] },
   { day: 5, platform: "Instagram", hook: "Your brand has a voice. Does your audience actually recognise it?", caption: "Brand voice isn't just tone — it's the emotional fingerprint your content leaves behind. Think about the 3 words you want people to feel when they see your post.", cta: "Comment your 3 brand voice words below 👇", hashtags: ["#BrandVoice", "#BrandIdentity", "#ContentMarketing", "#InstagramStrategy"] },
   { day: 6, platform: "Facebook", hook: "The #1 reason your social media ads aren't converting (it's not the budget).", caption: "Most brands spend thousands on paid ads but forget the basics: the offer needs to be irresistible before the targeting even matters. Fix your value proposition first. Then scale.", cta: "Share this with a business owner who needs to hear it.", hashtags: ["#FacebookAds", "#DigitalMarketing", "#PaidAds", "#MarketingAdvice"] },
   { day: 7, platform: "LinkedIn", hook: "We went from 200 to 12,000 followers in 6 months. No paid ads. No viral moments.", caption: "Just a repeatable content system built on three pillars: education, entertainment, and empathy. Every post we create hits at least two of those three. That's it. That's the whole strategy.", cta: "Save this post and audit your last 10 pieces of content against these pillars.", hashtags: ["#LinkedInStrategy", "#ContentSystem", "#OrganicGrowth", "#SocialMediaMarketing"] },
@@ -32,7 +32,6 @@ const platformColors: Record<Platform | string, { bg: string; text: string; bord
   Instagram: { bg: "rgba(236,72,153,0.12)", text: "#ec4899", border: "rgba(236,72,153,0.25)" },
   TikTok: { bg: "rgba(0,242,234,0.08)", text: "#00f2ea", border: "rgba(0,242,234,0.2)" },
   LinkedIn: { bg: "rgba(10,102,194,0.12)", text: "#60a5fa", border: "rgba(96,165,250,0.25)" },
-  "Twitter/X": { bg: "rgba(241,241,241,0.06)", text: "#e2e8f0", border: "rgba(241,241,241,0.15)" },
   Facebook: { bg: "rgba(66,103,178,0.12)", text: "#818cf8", border: "rgba(129,140,248,0.25)" },
   YouTube: { bg: "rgba(239,68,68,0.1)", text: "#f87171", border: "rgba(248,113,113,0.25)" },
 };
@@ -43,8 +42,6 @@ const socialPlatforms = [
   { name: "Facebook", icon: "👥", color: "#818cf8" },
   { name: "LinkedIn", icon: "💼", color: "#60a5fa" },
   { name: "YouTube", icon: "▶️", color: "#f87171" },
-  { name: "Pinterest", icon: "📌", color: "#f97316" },
-  { name: "Twitter/X", icon: "🐦", color: "#e2e8f0" },
 ];
 
 export default function DashboardPage() {

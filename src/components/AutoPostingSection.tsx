@@ -65,7 +65,7 @@ export default function AutoPostingSection() {
             <span className="gradient-text">We Post For You</span>
           </h2>
           <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "1.05rem", maxWidth: "560px", margin: "0 auto", lineHeight: 1.7 }}>
-            Connect your social accounts once. Every post gets automatically scheduled and published at the perfect time. Across 15 platforms. Zero manual work.
+            Generate platform-perfect content for 5 major platforms. Auto-post across 15 via our scheduling engine. Zero manual work.
           </p>
         </div>
 
