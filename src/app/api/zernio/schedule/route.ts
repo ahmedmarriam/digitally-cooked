@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 const ZERNIO_BASE = "https://zernio.com/api/v1";
 
 export async function POST(request: NextRequest) {
-  try {
-    const { posts, bearerToken } = await request.json();
+  const apiKey = process.env.ZERNIO_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "Zernio not configured." }, { status: 500 });
+  }
 
-    if (!bearerToken) {
-      return NextResponse.json({ error: "No Zernio token provided." }, { status: 400 });
-    }
+  try {
+    const { posts } = await request.json();
 
     if (!posts || !Array.isArray(posts) || posts.length === 0) {
       return NextResponse.json({ error: "No posts to schedule." }, { status: 400 });
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${bearerToken}`,
+            Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
             platform: post.platform,
