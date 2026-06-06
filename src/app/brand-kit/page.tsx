@@ -71,6 +71,8 @@ export default function BrandKitPage() {
   const [step, setStep] = useState(1);
   const [kit, setKit] = useState<BrandKit>(EMPTY);
   const [done, setDone] = useState(false);
+  const [positioningStatement, setPositioningStatement] = useState("");
+  const [generatingStatement, setGeneratingStatement] = useState(false);
 
   const totalSteps = 5;
   const progress = (step / totalSteps) * 100;
@@ -82,14 +84,28 @@ export default function BrandKitPage() {
     set("ageRanges", current.includes(age) ? current.filter((a) => a !== age) : [...current, age]);
   };
 
-  const positioningStatement =
-    kit.whatYouDo && kit.whoYouServe && kit.howYouDiffer
-      ? `We help ${kit.whoYouServe} ${kit.whatYouDo}, unlike anyone else because ${kit.howYouDiffer}.`
-      : "";
+  const handleFinish = async () => {
+    setGeneratingStatement(true);
 
-  const handleFinish = () => {
+    // Generate AI positioning statement from all answers
+    let statement = `We help ${kit.whoYouServe} ${kit.whatYouDo}, unlike anyone else because ${kit.howYouDiffer}.`;
+    try {
+      const res = await fetch("/api/brand-kit/positioning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(kit),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.statement) statement = data.statement;
+      }
+    } catch { /* fallback to template */ }
+
+    setPositioningStatement(statement);
+    setGeneratingStatement(false);
+
     // Save to localStorage so brand-profile can auto-fill
-    try { localStorage.setItem("dc_brand_kit", JSON.stringify(kit)); } catch {}
+    try { localStorage.setItem("dc_brand_kit", JSON.stringify({ ...kit, positioningStatement: statement })); } catch {}
     setDone(true);
   };
 
@@ -387,11 +403,11 @@ export default function BrandKitPage() {
               </button>
             ) : (
               <button
-                onClick={() => canNext() && handleFinish()}
-                disabled={!canNext()}
-                style={{ padding: "12px 32px", borderRadius: "10px", background: canNext() ? "linear-gradient(135deg, #7B2FFF, #ec4899)" : "rgba(123,47,255,0.3)", border: "none", color: "#fff", fontSize: "0.9rem", fontWeight: 700, cursor: canNext() ? "pointer" : "not-allowed", boxShadow: canNext() ? "0 4px 20px rgba(123,47,255,0.4)" : "none", transition: "all 0.2s" }}
+                onClick={() => canNext() && !generatingStatement && handleFinish()}
+                disabled={!canNext() || generatingStatement}
+                style={{ padding: "12px 32px", borderRadius: "10px", background: canNext() && !generatingStatement ? "linear-gradient(135deg, #7B2FFF, #ec4899)" : "rgba(123,47,255,0.3)", border: "none", color: "#fff", fontSize: "0.9rem", fontWeight: 700, cursor: canNext() && !generatingStatement ? "pointer" : "not-allowed", boxShadow: canNext() && !generatingStatement ? "0 4px 20px rgba(123,47,255,0.4)" : "none", transition: "all 0.2s" }}
               >
-                ✦ Complete Brand Kit →
+                {generatingStatement ? "✦ Crafting your statement..." : "✦ Complete Brand Kit →"}
               </button>
             )}
           </div>
