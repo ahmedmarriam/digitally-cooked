@@ -102,23 +102,42 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { batch = 1 } = body;
+    const { batch = 1, brand_id } = body;
     const batchNum = Number(batch);
     const isBonus = batchNum === 6;
 
-    const { data: brand, error: brandFetchError } = await supabase
-      .from("brands")
-      .select("*")
-      .eq("generation_status", "generating")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    let brand = null;
 
-    if (brandFetchError || !brand) {
-      return NextResponse.json({ error: "No brand found to generate posts for." }, { status: 404 });
+    if (brand_id) {
+      // Prefer looking up by brand_id — reliable even if status changed or scenario retries
+      const { data, error } = await supabase
+        .from("brands")
+        .select("*")
+        .eq("id", brand_id)
+        .single();
+      if (!error && data) brand = data;
     }
 
-    const brand_id = brand.id;
+    if (!brand) {
+      // Fallback: find the most recently-started brand that is still generating
+      const { data, error } = await supabase
+        .from("brands")
+        .select("*")
+        .eq("generation_status", "generating")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (!error && data) brand = data;
+    }
+
+    if (!brand) {
+      return NextResponse.json(
+        { error: "No brand found to generate posts for.", hint: "Pass brand_id in the request body or ensure generation_status is 'generating'." },
+        { status: 404 }
+      );
+    }
+
+    const brandDbId = brand.id;
     const user_id = brand.user_id;
     const platformArray: string[] = Array.isArray(brand.platforms)
       ? brand.platforms
@@ -259,7 +278,7 @@ Platforms: ${platformList}${brand.social_style_context ? `\n\nExisting social me
 
       for (const variation of variations) {
         rows.push({
-          brand_id,
+          brand_id: brandDbId,
           user_id: user_id ?? null,
           post_number: postNum++,
           post_group: postGroup,
@@ -290,7 +309,7 @@ Platforms: ${platformList}${brand.social_style_context ? `\n\nExisting social me
     }
 
     if (batchNum === 6) {
-      await supabase.from("brands").update({ generation_status: "complete" }).eq("id", brand_id);
+      await supabase.from("brands").update({ generation_status: "complete" }).eq("id", brandDbId);
     }
 
     return NextResponse.json({ success: true, batch: batchNum, concepts: conceptGroups.length });
