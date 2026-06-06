@@ -5,7 +5,7 @@
  * Bonus posts: 70% image, 30% solid.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import {
   buildBrandContext,
@@ -85,31 +85,48 @@ async function uploadImage(buffer: Buffer, fileName: string): Promise<string | n
 }
 
 // ── Main handler ───────────────────────────────────────────────
-export async function POST() {
+export async function POST(request: NextRequest) {
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
     return NextResponse.json({ error: "OpenAI API key not configured." }, { status: 500 });
   }
 
+  let brand_id: string | null = null;
+  try {
+    const body = await request.json().catch(() => ({}));
+    brand_id = body.brand_id ?? null;
+  } catch { /* no body is fine */ }
+
   try {
     await ensureBucket();
 
-    // Find the most recent brand with posts needing images
-    const { data: recentBrands } = await supabase
-      .from("brands")
-      .select("id, brand_name, brand_colors, content_tone, visual_style, business_type, logo_url")
-      .in("generation_status", ["complete", "generating"])
-      .order("created_at", { ascending: false })
-      .limit(10);
-
     let rawBrand = null;
-    for (const b of recentBrands ?? []) {
-      const { count } = await supabase
-        .from("posts")
-        .select("id", { count: "exact", head: true })
-        .eq("brand_id", b.id)
-        .is("image_url", null);
-      if (count && count > 0) { rawBrand = b; break; }
+
+    if (brand_id) {
+      // Look up the specific brand directly
+      const { data } = await supabase
+        .from("brands")
+        .select("id, brand_name, brand_colors, content_tone, visual_style, business_type, logo_url")
+        .eq("id", brand_id)
+        .single();
+      rawBrand = data ?? null;
+    } else {
+      // Fallback: find the most recent brand with posts needing images
+      const { data: recentBrands } = await supabase
+        .from("brands")
+        .select("id, brand_name, brand_colors, content_tone, visual_style, business_type, logo_url")
+        .in("generation_status", ["complete", "generating"])
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      for (const b of recentBrands ?? []) {
+        const { count } = await supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .eq("brand_id", b.id)
+          .is("image_url", null);
+        if (count && count > 0) { rawBrand = b; break; }
+      }
     }
 
     if (!rawBrand) {
