@@ -161,19 +161,8 @@ async function renderImagePost(
     ctx.fillRect(0, 0, size, size);
   }
 
-  // Deep gradient overlay from 35% down — ensures text is always readable
-  const gradient = ctx.createLinearGradient(0, size * 0.35, 0, size);
-  gradient.addColorStop(0, "rgba(0,0,0,0)");
-  gradient.addColorStop(0.5, "rgba(0,0,0,0.7)");
-  gradient.addColorStop(1, "rgba(0,0,0,0.92)");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-
-  // Subtle top vignette
-  const topGrad = ctx.createLinearGradient(0, 0, 0, size * 0.2);
-  topGrad.addColorStop(0, "rgba(0,0,0,0.35)");
-  topGrad.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = topGrad;
+  // Base overlay — subtle darkening over the FULL canvas so text is always readable
+  ctx.fillStyle = "rgba(0,0,0,0.28)";
   ctx.fillRect(0, 0, size, size);
 
   // Brand accent line at bottom
@@ -182,9 +171,9 @@ async function renderImagePost(
 
   const pad = 72;
   const font = post.fontFamily ?? "Inter";
-  const hookFontSize = Math.floor(size * 0.065 * (post.hookFontScale ?? 1));
-  const hookLineH = Math.floor(hookFontSize * 1.2);
-  const capFontSize = Math.floor(size * 0.026);
+  const hookFontSize = Math.floor(size * 0.075 * (post.hookFontScale ?? 1));
+  const hookLineH = Math.floor(hookFontSize * 1.25);
+  const capFontSize = Math.floor(size * 0.028);
   const capLineH = Math.floor(capFontSize * 1.45);
 
   // Measure how many lines the hook needs to find starting Y
@@ -195,20 +184,32 @@ async function renderImagePost(
   // Work out total text block height
   const capLineCount = post.showCaption !== false ? Math.min(2, measureLines(ctx, truncate(post.caption, 120), size - pad * 2)) : 0;
   const ctaHeight = post.cta ? capLineH + 8 : 0;
-  const gapBetween = 18;
+  const gapBetween = 20;
   const blockH = hookLineCount * hookLineH + gapBetween + capLineCount * capLineH + (capLineCount > 0 ? gapBetween : 0) + ctaHeight + 28;
 
   // Position text based on textY: 0=top, 50=center, 100=bottom
-  const topY = pad + 20;
-  const bottomY = size - 5 - blockH;
+  const topY = pad + 30;
+  const bottomY = size - 20 - blockH;
   const textYPos = post.textY ?? 100;  // Default to bottom
   let y = topY + (bottomY - topY) * (textYPos / 100);
 
-  // Optional backdrop for text readability
+  // Dark gradient scrim behind the text block so it's always readable
+  const scrimPad = 24;
+  const scrimTop = Math.max(0, y - scrimPad);
+  const scrimBot = Math.min(size, y + blockH + scrimPad);
+  const scrimGrad = ctx.createLinearGradient(0, scrimTop, 0, scrimBot);
+  scrimGrad.addColorStop(0, "rgba(0,0,0,0)");
+  scrimGrad.addColorStop(0.2, "rgba(0,0,0,0.65)");
+  scrimGrad.addColorStop(0.8, "rgba(0,0,0,0.65)");
+  scrimGrad.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = scrimGrad;
+  ctx.fillRect(0, scrimTop, size, scrimBot - scrimTop);
+
+  // Optional stronger backdrop pill
   if (post.textBackdrop) {
     const backdropPad = 16;
-    const backdropH = (capLineCount > 0 ? hookLineCount + capLineCount : hookLineCount) * hookLineH + gapBetween * 2 + 32;
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    const backdropH = blockH + backdropPad * 2;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
     roundRect(ctx, pad - backdropPad, y - backdropPad, size - pad * 2 + backdropPad * 2, backdropH, 16);
     ctx.fill();
   }

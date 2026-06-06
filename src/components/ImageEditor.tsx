@@ -80,7 +80,7 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
   const [showCaption, setShowCaption] = useState(true);
   const [textBackdrop, setTextBackdrop] = useState(false);
   const [template, setTemplate] = useState<"bold" | "gradient" | "split" | "editorial">("bold");
-  const [textY, setTextY] = useState(50);  // 0=top, 50=center, 100=bottom
+  const [textY, setTextY] = useState(100);  // 0=top, 50=center, 100=bottom (default bottom)
 
   // Preview
   const [previewUrl, setPreviewUrl] = useState<string | null>(post.image_url ?? null);
@@ -238,8 +238,8 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
               <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#a78bfa", letterSpacing: "0.08em", marginBottom: "10px" }}>TYPOGRAPHY</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
-                  <label style={LABEL}>HOOK SIZE — {Math.round(hookScale * 100)}%</label>
-                  <input type="range" min={50} max={150} step={5} value={Math.round(hookScale * 100)} onChange={(e) => setHookScale(Number(e.target.value) / 100)} style={{ width: "100%", accentColor: "#7B2FFF" }} />
+                  <label style={LABEL}>HOOK SIZE — {hookScale < 0.8 ? "Small" : hookScale < 1.1 ? "Medium" : hookScale < 1.4 ? "Large" : "X-Large"}</label>
+                  <input type="range" min={60} max={180} step={10} value={Math.round(hookScale * 100)} onChange={(e) => setHookScale(Number(e.target.value) / 100)} style={{ width: "100%", accentColor: "#7B2FFF" }} />
                 </div>
                 <div>
                   <label style={LABEL}>HOOK COLOUR</label>
@@ -313,7 +313,7 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
               </div>
             </div>
 
-            <button onClick={() => { setHook(post.hook ?? ""); setCaption(post.caption ?? ""); setCta(post.cta ?? ""); setHookScale(1.0); setHookColor("#ffffff"); setFontFamily("Inter"); setTextAlign("left"); setTextY(50); setShowCaption(true); setTextBackdrop(false); setTemplate("bold"); }} style={{ padding: "8px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(241,241,241,0.35)", fontSize: "0.75rem", cursor: "pointer" }}>
+            <button onClick={() => { setHook(post.hook ?? ""); setCaption(post.caption ?? ""); setCta(post.cta ?? ""); setHookScale(1.0); setHookColor("#ffffff"); setFontFamily("Inter"); setTextAlign("left"); setTextY(100); setShowCaption(true); setTextBackdrop(false); setTemplate("bold"); }} style={{ padding: "8px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(241,241,241,0.35)", fontSize: "0.75rem", cursor: "pointer" }}>
               ↩ Reset all
             </button>
           </div>
