@@ -157,18 +157,18 @@ export async function POST(request: NextRequest) {
       return true;
     });
 
-    // Process 2 at a time to stay within Vercel's timeout (Vercel OG is slower)
-    const uniqueConcepts = allConcepts.slice(0, 2);
+    // Process up to 8 concepts per call — enough for one full batch
+    const uniqueConcepts = allConcepts.slice(0, 8);
 
     let generated = 0;
     let failed = 0;
-    let postIndex = 0;
 
     for (const post of uniqueConcepts) {
       const isBonus = post.is_bonus ?? false;
-      const useImage = shouldUseImage(postIndex, isBonus);
-      const template = selectTemplate(brand, postIndex);
-      // dall-e-2 is square only — templates handle portrait layouts via CSS
+      const postGroup = post.post_group ?? 1;
+      // Use post_group as the ratio index — globally unique per concept
+      const useImage = shouldUseImage(postGroup, isBonus);
+      const template = selectTemplate(brand, postGroup);
       const w = 1024;
       const h = 1024;
 
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
         cta: post.cta ?? "",
         hashtags: post.hashtags ?? "",
         format: post.format ?? "",
-        postIndex,
+        postIndex: postGroup,
         isBonus,
       };
 
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (finalBuffer) {
-        const fileName = `posts/${rawBrand.id}/pg${post.post_group ?? postIndex}-${Date.now()}.jpg`;
+        const fileName = `posts/${rawBrand.id}/pg${post.post_group ?? postGroup}-${Date.now()}.jpg`;
         const publicUrl = await uploadImage(finalBuffer, fileName);
 
         if (publicUrl) {
@@ -225,7 +225,6 @@ export async function POST(request: NextRequest) {
         failed++;
       }
 
-      postIndex++;
     }
 
     return NextResponse.json({

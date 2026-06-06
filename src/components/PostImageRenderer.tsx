@@ -51,10 +51,14 @@ function getContrastColor(hex: string): string {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.45 ? "#111111" : "#ffffff";
 }
 
-// 60% of regular posts get DALL-E backgrounds, 70% of bonus posts
-function shouldUseDalle(postIndex: number, isBonus: boolean): boolean {
-  const safeIndex = isNaN(postIndex) ? 0 : postIndex;
-  return isBonus ? safeIndex % 10 < 7 : safeIndex % 10 < 6;
+// 60% of regular posts get DALL-E backgrounds, 70% of bonus posts.
+// Uses post_group (1-based) as the cycle index — globally unique per concept.
+// post_group % 10 → 1-6 = image (60%), 7-9,0 = solid for regular
+// post_group % 10 → 1-7 = image (70%), 8-9,0 = solid for bonus
+function shouldUseDalle(postGroup: number, isBonus: boolean): boolean {
+  const g = isNaN(postGroup) || postGroup < 1 ? 1 : postGroup;
+  const idx = g % 10;
+  return isBonus ? idx < 7 : idx < 6;
 }
 
 async function fetchDalleImage(ctx: {
@@ -114,8 +118,8 @@ export default function PostImageRenderer({ post, brand, cardIndex = 0, onImageR
       businessType: brand.business_type ?? "",
     };
 
-    // Ensure postIndex is always a valid number — NaN causes shouldUseDalle to always be false
-    const postIndex = Math.max(0, ((post.post_number ?? post.post_group ?? 1) - 1));
+    // Use post_group as the cycle index — globally consistent across all platforms
+    const postGroup = post.post_group ?? 1;
 
     const postData: PostData = {
       hook: post.hook ?? "",
@@ -124,16 +128,15 @@ export default function PostImageRenderer({ post, brand, cardIndex = 0, onImageR
       hashtags: post.hashtags ?? "",
       imageUrl: null,
       isBonus: post.is_bonus ?? false,
-      postIndex,
+      postIndex: postGroup,
     };
 
     async function render() {
       setRendering(true);
 
-      // Stagger DALL-E calls so all 30 posts don't fire simultaneously
+      // Stagger DALL-E calls so all posts don't fire simultaneously
       // Each card waits its turn: card 0 = instant, card 1 = 1.5s, card 2 = 3s etc.
-      // Only stagger if this card would use DALL-E
-      const useDalle = shouldUseDalle(postIndex, post.is_bonus);
+      const useDalle = shouldUseDalle(postGroup, post.is_bonus ?? false);
       if (useDalle && cardIndex > 0) {
         setRenderStatus("Queued...");
         await new Promise((r) => setTimeout(r, cardIndex * 1500));
@@ -148,7 +151,7 @@ export default function PostImageRenderer({ post, brand, cardIndex = 0, onImageR
           caption: post.caption,
           brandName: brand.brand_name,
           businessType: brand.business_type,
-          postIndex,
+          postIndex: postGroup,
         });
       }
 

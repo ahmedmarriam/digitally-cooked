@@ -102,8 +102,13 @@ export function selectTemplate(brand: BrandContext, postIndex: number): Template
   return cycle[postIndex % cycle.length];
 }
 
-export function shouldUseImage(postIndex: number, isBonus: boolean): boolean {
-  return isBonus ? postIndex % 10 < 7 : postIndex % 5 < 3;
+// Use post_group (1-based) as the index — globally unique per concept.
+// Regular: groups whose post_group % 10 is 1-6 get images → 60%
+// Bonus:   groups whose post_group % 10 is 1-7 get images → 70%
+export function shouldUseImage(postGroup: number, isBonus: boolean): boolean {
+  const g = isNaN(postGroup) || postGroup < 1 ? 1 : postGroup;
+  const idx = g % 10;  // 0-9
+  return isBonus ? idx < 7 : idx < 6;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────
