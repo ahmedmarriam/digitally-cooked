@@ -195,15 +195,19 @@ async function renderImagePost(
   ctx.font = `900 ${hookFontSize}px ${font}, sans-serif`;
   ctx.shadowColor = "rgba(0,0,0,0.7)";
   ctx.shadowBlur = 12;
-  const drawnHookLines = wrapText(ctx, hookText, pad, y, size - pad * 2, hookLineH, 3);
+  ctx.textAlign = post.textAlign ?? "left";
+  const drawnHookLines = wrapTextWithAlign(ctx, hookText, pad, y, size - pad * 2, hookLineH, 3, post.textAlign ?? "left");
   ctx.shadowBlur = 0;
+  ctx.textAlign = "left";
   y += drawnHookLines * hookLineH + gapBetween;
 
   // Caption (optional)
   if (post.showCaption !== false && post.caption) {
     ctx.fillStyle = "rgba(255,255,255,0.82)";
     ctx.font = `400 ${capFontSize}px ${font}, sans-serif`;
-    const drawnCapLines = wrapText(ctx, truncate(post.caption, 130), pad, y, size - pad * 2, capLineH, 2);
+    ctx.textAlign = post.textAlign ?? "left";
+    const drawnCapLines = wrapTextWithAlign(ctx, truncate(post.caption, 130), pad, y, size - pad * 2, capLineH, 2, post.textAlign ?? "left");
+    ctx.textAlign = "left";
     y += drawnCapLines * capLineH + gapBetween;
   }
 
@@ -302,7 +306,9 @@ async function renderBold(ctx: CanvasRenderingContext2D, post: PostData, brand: 
   // Hook — large, punchy
   ctx.fillStyle = hookColor;
   ctx.font = `900 ${Math.floor(size * 0.07 * (post.hookFontScale ?? 1))}px ${font}, sans-serif`;
-  const hookLines = wrapText(ctx, truncate(post.hook, 70), pad, 195, size - pad * 2, Math.floor(size * 0.085 * (post.hookFontScale ?? 1)), 3);
+  ctx.textAlign = post.textAlign ?? "left";
+  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 70), pad, 195, size - pad * 2, Math.floor(size * 0.085 * (post.hookFontScale ?? 1)), 3, post.textAlign ?? "left");
+  ctx.textAlign = "left";
 
   // Thin accent line after hook
   const divY = 195 + hookLines * Math.floor(size * 0.085) + 28;
@@ -311,12 +317,16 @@ async function renderBold(ctx: CanvasRenderingContext2D, post: PostData, brand: 
   ctx.fillRect(pad, divY, size * 0.22, 2);
   ctx.globalAlpha = 1;
 
-  // Caption — readable body text
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.78;
-  ctx.font = `400 ${Math.floor(size * 0.028)}px Inter, sans-serif`;
-  wrapText(ctx, truncate(post.caption, 110), pad, divY + 46, size - pad * 2, Math.floor(size * 0.036), 3);
-  ctx.globalAlpha = 1;
+  // Caption — readable body text (respect showCaption flag)
+  if (post.showCaption !== false) {
+    ctx.fillStyle = tc;
+    ctx.globalAlpha = 0.78;
+    ctx.font = `400 ${Math.floor(size * 0.028)}px Inter, sans-serif`;
+    ctx.textAlign = post.textAlign ?? "left";
+    wrapTextWithAlign(ctx, truncate(post.caption, 110), pad, divY + 46, size - pad * 2, Math.floor(size * 0.036), 3, post.textAlign ?? "left");
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
+  }
 
   // CTA — solid white pill
   const ctaY = size - 190;
@@ -372,19 +382,35 @@ async function renderGradient(ctx: CanvasRenderingContext2D, post: PostData, bra
   ctx.fillText(brand.name.toUpperCase().substring(0, 20), size / 2, 90);
   ctx.globalAlpha = 1;
 
-  // Hook (centered)
-  ctx.fillStyle = tc;
-  ctx.font = `900 ${Math.floor(size * 0.065)}px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  wrapTextCentered(ctx, truncate(post.hook, 80), size / 2, 280, size - pad * 2, Math.floor(size * 0.08), 3);
+  // Hook (use textAlign if customized, else centered)
+  ctx.fillStyle = post.hookColor ?? tc;
+  ctx.font = `900 ${Math.floor(size * 0.065 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Inter"}, sans-serif`;
+  if (post.textAlign && post.textAlign !== "center") {
+    // Use custom alignment
+    ctx.textAlign = post.textAlign;
+    const alignX = post.textAlign === "right" ? size - pad : pad;
+    wrapTextWithAlign(ctx, truncate(post.hook, 80), alignX, 280, size - pad * 2, Math.floor(size * 0.08), 3, post.textAlign);
+  } else {
+    // Default centered
+    ctx.textAlign = "center";
+    wrapTextCentered(ctx, truncate(post.hook, 80), size / 2, 280, size - pad * 2, Math.floor(size * 0.08), 3);
+  }
 
-  // Caption (centered)
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.78;
-  ctx.font = `400 ${Math.floor(size * 0.027)}px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  wrapTextCentered(ctx, truncate(post.caption, 100), size / 2, 530, size - pad * 2, Math.floor(size * 0.034), 2);
-  ctx.globalAlpha = 1;
+  // Caption (centered by default, respects showCaption flag)
+  if (post.showCaption !== false) {
+    ctx.fillStyle = tc;
+    ctx.globalAlpha = 0.78;
+    ctx.font = `400 ${Math.floor(size * 0.027)}px Inter, sans-serif`;
+    if (post.textAlign && post.textAlign !== "center") {
+      ctx.textAlign = post.textAlign;
+      const alignX = post.textAlign === "right" ? size - pad : pad;
+      wrapTextWithAlign(ctx, truncate(post.caption, 100), alignX, 530, size - pad * 2, Math.floor(size * 0.034), 2, post.textAlign);
+    } else {
+      ctx.textAlign = "center";
+      wrapTextCentered(ctx, truncate(post.caption, 100), size / 2, 530, size - pad * 2, Math.floor(size * 0.034), 2);
+    }
+    ctx.globalAlpha = 1;
+  }
 
   // CTA Button (centered)
   const ctaW = Math.min(size * 0.5, post.cta.length * 18 + 100);
@@ -459,10 +485,12 @@ async function renderSplit(ctx: CanvasRenderingContext2D, post: PostData, brand:
   ctx.letterSpacing = "0px";
   ctx.globalAlpha = 1;
 
-  // Left: hook — large and bold
-  ctx.fillStyle = tc;
-  ctx.font = `900 ${Math.floor(size * 0.064)}px Inter, sans-serif`;
-  const hookLines = wrapText(ctx, truncate(post.hook, 65), pad, 210, splitX - pad * 1.6, Math.floor(size * 0.078), 3);
+  // Left: hook — large and bold (use editor customizations)
+  ctx.fillStyle = post.hookColor ?? tc;
+  ctx.font = `900 ${Math.floor(size * 0.064 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Inter"}, sans-serif`;
+  ctx.textAlign = post.textAlign ?? "left";
+  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 65), pad, 210, splitX - pad * 1.6, Math.floor(size * 0.078), 3, post.textAlign ?? "left");
+  ctx.textAlign = "left";
 
   // Left: thin divider after hook
   const divY = 210 + hookLines * Math.floor(size * 0.078) + 24;
@@ -471,12 +499,16 @@ async function renderSplit(ctx: CanvasRenderingContext2D, post: PostData, brand:
   ctx.fillRect(pad, divY, size * 0.18, 2);
   ctx.globalAlpha = 1;
 
-  // Left: caption
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.75;
-  ctx.font = `400 ${Math.floor(size * 0.025)}px Inter, sans-serif`;
-  wrapText(ctx, truncate(post.caption, 90), pad, divY + 44, splitX - pad * 1.6, Math.floor(size * 0.032), 3);
-  ctx.globalAlpha = 1;
+  // Left: caption (respects showCaption flag)
+  if (post.showCaption !== false) {
+    ctx.fillStyle = tc;
+    ctx.globalAlpha = 0.75;
+    ctx.font = `400 ${Math.floor(size * 0.025)}px Inter, sans-serif`;
+    ctx.textAlign = post.textAlign ?? "left";
+    wrapTextWithAlign(ctx, truncate(post.caption, 90), pad, divY + 44, splitX - pad * 1.6, Math.floor(size * 0.032), 3, post.textAlign ?? "left");
+    ctx.textAlign = "left";
+    ctx.globalAlpha = 1;
+  }
 
   // Left: CTA button
   const ctaY = size - 168;
@@ -529,10 +561,12 @@ async function renderEditorial(ctx: CanvasRenderingContext2D, post: PostData, br
   ctx.fillStyle = brand.primaryColor;
   ctx.fillRect(pad, 120, size * 0.2, 3);
 
-  // Hook (serif style)
-  ctx.fillStyle = "white";
-  ctx.font = `800 ${Math.floor(size * 0.062)}px Georgia, serif`;
-  wrapText(ctx, truncate(post.hook, 90), pad, 280, size - pad * 2, Math.floor(size * 0.076), 3);
+  // Hook (serif style, use editor customizations)
+  ctx.fillStyle = post.hookColor ?? "white";
+  ctx.font = `800 ${Math.floor(size * 0.062 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Georgia"}, serif`;
+  ctx.textAlign = post.textAlign ?? "left";
+  wrapTextWithAlign(ctx, truncate(post.hook, 90), pad, 280, size - pad * 2, Math.floor(size * 0.076), 3, post.textAlign ?? "left");
+  ctx.textAlign = "left";
 
   // Secondary accent line
   ctx.fillStyle = brand.primaryColor;
@@ -540,10 +574,14 @@ async function renderEditorial(ctx: CanvasRenderingContext2D, post: PostData, br
   ctx.fillRect(pad, 450, size * 0.18, 2);
   ctx.globalAlpha = 1;
 
-  // Caption
-  ctx.fillStyle = "rgba(255,255,255,0.65)";
-  ctx.font = `400 ${Math.floor(size * 0.026)}px Inter, sans-serif`;
-  wrapText(ctx, truncate(post.caption, 90), pad, 500, size - pad * 2, Math.floor(size * 0.033), 2);
+  // Caption (respects showCaption flag)
+  if (post.showCaption !== false) {
+    ctx.fillStyle = "rgba(255,255,255,0.65)";
+    ctx.font = `400 ${Math.floor(size * 0.026)}px Inter, sans-serif`;
+    ctx.textAlign = post.textAlign ?? "left";
+    wrapTextWithAlign(ctx, truncate(post.caption, 90), pad, 500, size - pad * 2, Math.floor(size * 0.033), 2, post.textAlign ?? "left");
+    ctx.textAlign = "left";
+  }
 
   // CTA arrow style
   ctx.fillStyle = brand.primaryColor;
@@ -640,6 +678,48 @@ function wrapTextCentered(
     ctx.fillText(line, x, y + lineCount * lineHeight);
     lineCount++;
   }
+  return lineCount;
+}
+
+function wrapTextWithAlign(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number,
+  align: "left" | "center" | "right"
+): number {
+  const words = text.split(" ");
+  let line = "";
+  let lineCount = 0;
+
+  // Save original textAlign
+  const originalAlign = ctx.textAlign as CanvasTextAlign;
+
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.textAlign = align;
+      const drawX = align === "center" ? x + maxWidth / 2 : align === "right" ? x + maxWidth : x;
+      ctx.fillText(line, drawX, y + lineCount * lineHeight);
+      line = word;
+      lineCount++;
+      if (lineCount >= maxLines) break;
+    } else {
+      line = test;
+    }
+  }
+  if (lineCount < maxLines && line) {
+    ctx.textAlign = align;
+    const drawX = align === "center" ? x + maxWidth / 2 : align === "right" ? x + maxWidth : x;
+    ctx.fillText(line, drawX, y + lineCount * lineHeight);
+    lineCount++;
+  }
+
+  // Restore original textAlign
+  ctx.textAlign = originalAlign;
   return lineCount;
 }
 
