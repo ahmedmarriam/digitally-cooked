@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid plan." }, { status: 400 });
     }
 
-    const origin = request.headers.get("origin") ?? "https://digitallycookedai.com";
+    const origin = request.headers.get("origin") ?? "https://digitallycooked.com";
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],

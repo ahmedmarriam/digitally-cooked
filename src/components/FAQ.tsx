@@ -181,7 +181,7 @@ export default function FAQ() {
             Still have questions? We'd love to help.
           </p>
           <a
-            href="mailto:hello@digitallycookedai.com"
+            href="mailto:hello@digitallycooked.com"
             style={{
               color: "#a78bfa",
               textDecoration: "none",
@@ -189,7 +189,7 @@ export default function FAQ() {
               fontSize: "0.95rem",
             }}
           >
-            📧 hello@digitallycookedai.com →
+            📧 hello@digitallycooked.com →
           </a>
         </div>
       </div>

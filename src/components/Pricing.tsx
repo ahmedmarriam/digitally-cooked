@@ -2,20 +2,17 @@
 
 import { useState } from "react";
 
-const PLAN_KEYS: Record<string, string> = {
-  "Start Cooking":    "starter",
-  "Start Growing":    "growth",
-  "Scale Your Agency":"agency",
-};
-
 const tiers = [
   {
     name: "Starter",
-    price: "49",
+    monthlyPrice: "49",
+    yearlyPrice: "490",
+    yearlySaving: "Save $98",
     period: "/mo",
     tagline: "Perfect for solo entrepreneurs & new businesses",
     color: "#8b5cf6",
     highlight: false,
+    trialNote: "7-day free trial",
     features: [
       "1 Brand Profile",
       "40 AI-generated posts/month",
@@ -27,16 +24,20 @@ const tiers = [
       "Email support",
     ],
     cta: "Start Cooking",
-    ctaHref: "/signup",
+    monthlyUrl: "https://digitally-cooked.lemonsqueezy.com/checkout/buy/13f5219a-fa8e-4a8c-81dd-3883794e92cf",
+    yearlyUrl:  "https://digitally-cooked.lemonsqueezy.com/checkout/buy/9e93b8f2-e457-485e-95e3-fb193805eb2d",
   },
   {
     name: "Growth",
-    price: "99",
+    monthlyPrice: "99",
+    yearlyPrice: "990",
+    yearlySaving: "Save $198",
     period: "/mo",
     tagline: "For businesses serious about scaling their presence",
     color: "#ec4899",
     highlight: true,
     badge: "Most Popular",
+    trialNote: "7-day free trial",
     features: [
       "3 Brand Profiles",
       "40 posts per brand/month",
@@ -49,15 +50,19 @@ const tiers = [
       "Early access to new features",
     ],
     cta: "Start Growing",
-    ctaHref: "/signup",
+    monthlyUrl: "https://digitally-cooked.lemonsqueezy.com/checkout/buy/fc446352-aa44-4d7f-a51c-2b4dc437f80d",
+    yearlyUrl:  "https://digitally-cooked.lemonsqueezy.com/checkout/buy/c18c91ff-ea4f-4478-9a13-58a771ea8627",
   },
   {
     name: "Agency",
-    price: "249",
+    monthlyPrice: "249",
+    yearlyPrice: "2,490",
+    yearlySaving: "Save $498",
     period: "/mo",
     tagline: "For agencies & teams managing multiple clients",
     color: "#f97316",
     highlight: false,
+    trialNote: "No trial — book a demo",
     features: [
       "10 Brand Profiles",
       "40 posts per brand/month",
@@ -69,37 +74,13 @@ const tiers = [
       "Custom onboarding session",
     ],
     cta: "Scale Your Agency",
-    ctaHref: "/signup",
+    monthlyUrl: "https://digitally-cooked.lemonsqueezy.com/checkout/buy/e2d78a8e-6e14-4eb0-a52a-5288606f5272",
+    yearlyUrl:  "https://digitally-cooked.lemonsqueezy.com/checkout/buy/5c7ca6c0-8fa7-4e99-a7a9-31402d949d34",
   },
 ];
 
 export default function Pricing() {
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [stripeError, setStripeError] = useState("");
-
-  const handleCheckout = async (ctaLabel: string) => {
-    const plan = PLAN_KEYS[ctaLabel];
-    if (!plan) return;
-    setStripeError("");
-    setLoadingPlan(plan);
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        setStripeError(data.error ?? "Checkout failed. Please try again.");
-        setLoadingPlan(null);
-        return;
-      }
-      window.location.href = data.url;
-    } catch {
-      setStripeError("Something went wrong. Please try again.");
-      setLoadingPlan(null);
-    }
-  };
+  const [isYearly, setIsYearly] = useState(false);
 
   return (
     <section
@@ -142,9 +123,26 @@ export default function Pricing() {
             Pick Your Plan.{" "}
             <span className="gradient-text">Start Creating.</span>
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "1.05rem", maxWidth: "460px", margin: "0 auto" }}>
+          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "1.05rem", maxWidth: "460px", margin: "0 auto 32px" }}>
             No hidden fees. Cancel anytime. Cheaper than a single sponsored post — and infinitely more sustainable.
           </p>
+
+          {/* Monthly / Yearly toggle */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "999px", padding: "6px 8px" }}>
+            <button
+              onClick={() => setIsYearly(false)}
+              style={{ padding: "8px 20px", borderRadius: "999px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.88rem", background: !isYearly ? "#7B2FFF" : "transparent", color: !isYearly ? "#fff" : "rgba(255,255,255,0.45)", transition: "all 0.2s" }}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsYearly(true)}
+              style={{ padding: "8px 20px", borderRadius: "999px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.88rem", background: isYearly ? "#7B2FFF" : "transparent", color: isYearly ? "#fff" : "rgba(255,255,255,0.45)", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              Yearly
+              <span style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", fontSize: "0.72rem", fontWeight: 700, padding: "2px 8px", borderRadius: "999px" }}>2 months free</span>
+            </button>
+          </div>
         </div>
 
         <style>{`
@@ -235,23 +233,27 @@ export default function Pricing() {
               </div>
 
               {/* Price */}
-              <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "8px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "4px" }}>
                 <span style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>$</span>
-                <span
-                  style={{
-                    fontSize: "3.2rem",
-                    fontWeight: 900,
-                    lineHeight: 1,
-                    color: "#fff",
-                    letterSpacing: "-0.03em",
-                  }}
-                >
-                  {tier.price}
+                <span style={{ fontSize: "3.2rem", fontWeight: 900, lineHeight: 1, color: "#fff", letterSpacing: "-0.03em" }}>
+                  {isYearly ? tier.yearlyPrice : tier.monthlyPrice}
                 </span>
                 <span style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
-                  {tier.period}
+                  {isYearly ? "/yr" : "/mo"}
                 </span>
               </div>
+
+              {isYearly && (
+                <div style={{ marginBottom: "8px" }}>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#10b981", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "999px", padding: "2px 10px" }}>
+                    {tier.yearlySaving}
+                  </span>
+                </div>
+              )}
+
+              <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.35)", marginBottom: "6px" }}>
+                {tier.trialNote}
+              </p>
 
               <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", marginBottom: "24px", lineHeight: 1.5 }}>
                 {tier.tagline}
@@ -277,9 +279,10 @@ export default function Pricing() {
               </ul>
 
               {/* CTA */}
-              <button
-                onClick={() => handleCheckout(tier.cta)}
-                disabled={loadingPlan !== null}
+              <a
+                href={isYearly ? tier.yearlyUrl : tier.monthlyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={
                   tier.highlight
                     ? {
@@ -288,14 +291,14 @@ export default function Pricing() {
                         textAlign: "center",
                         padding: "16px",
                         borderRadius: "14px",
-                        background: loadingPlan === PLAN_KEYS[tier.cta] ? "rgba(139,92,246,0.5)" : `linear-gradient(135deg, ${tier.color}, #8b5cf6)`,
+                        background: `linear-gradient(135deg, ${tier.color}, #8b5cf6)`,
                         color: "#fff",
                         fontWeight: 700,
                         fontSize: "1rem",
-                        border: "none",
-                        cursor: loadingPlan ? "not-allowed" : "pointer",
+                        textDecoration: "none",
                         boxShadow: `0 6px 25px ${tier.color}45`,
                         transition: "opacity 0.2s ease, transform 0.2s ease",
+                        boxSizing: "border-box",
                       }
                     : {
                         display: "block",
@@ -308,25 +311,19 @@ export default function Pricing() {
                         color: tier.color,
                         fontWeight: 700,
                         fontSize: "1rem",
-                        cursor: loadingPlan ? "not-allowed" : "pointer",
+                        textDecoration: "none",
                         transition: "all 0.2s ease",
+                        boxSizing: "border-box",
                       }
                 }
-                onMouseEnter={(e) => { if (!loadingPlan) { (e.currentTarget as HTMLButtonElement).style.opacity = "0.85"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; }}}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "0.85"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "1"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)"; }}
               >
-                {loadingPlan === PLAN_KEYS[tier.cta] ? "Redirecting..." : `${tier.cta} →`}
-              </button>
+                {tier.cta} →
+              </a>
             </div>
           ))}
         </div>
-
-        {/* Stripe error */}
-        {stripeError && (
-          <div style={{ textAlign: "center", marginTop: "24px", padding: "12px 20px", borderRadius: "10px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", fontSize: "0.88rem" }}>
-            {stripeError}
-          </div>
-        )}
 
         {/* Trust note */}
         <div style={{ textAlign: "center", marginTop: "48px", color: "rgba(255,255,255,0.35)", fontSize: "0.85rem" }}>

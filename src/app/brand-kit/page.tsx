@@ -7,11 +7,11 @@ import AppSidebar from "@/components/AppSidebar";
 // ─── Types ────────────────────────────────────────────────────
 interface BrandKit {
   // Step 1
-  primaryVibe: string;
+  primaryVibe: string[];
   formalityLevel: string;
-  customerEmotion: string;
+  customerEmotion: string[];
   businessSize: string;
-  contentGoal: string;
+  contentGoal: string[];
   // Step 2
   toneOfVoice: string;
   // Step 3
@@ -25,19 +25,14 @@ interface BrandKit {
   howYouDiffer: string;
   // Step 5
   colorPalette: string;
-  // Step 6
-  mission: string;
-  vision: string;
-  values: string;
 }
 
 const EMPTY: BrandKit = {
-  primaryVibe: "", formalityLevel: "", customerEmotion: "", businessSize: "", contentGoal: "",
+  primaryVibe: [], formalityLevel: "", customerEmotion: [], businessSize: "", contentGoal: [],
   toneOfVoice: "",
   ageRanges: [], location: "", interests: "", painPoints: ["", "", ""],
   whatYouDo: "", whoYouServe: "", howYouDiffer: "",
   colorPalette: "",
-  mission: "", vision: "", values: "",
 };
 
 // ─── Step data ────────────────────────────────────────────────
@@ -77,7 +72,7 @@ export default function BrandKitPage() {
   const [kit, setKit] = useState<BrandKit>(EMPTY);
   const [done, setDone] = useState(false);
 
-  const totalSteps = 6;
+  const totalSteps = 5;
   const progress = (step / totalSteps) * 100;
 
   const set = (key: keyof BrandKit, val: unknown) => setKit((k) => ({ ...k, [key]: val }));
@@ -99,12 +94,11 @@ export default function BrandKitPage() {
   };
 
   const canNext = () => {
-    if (step === 1) return kit.primaryVibe && kit.formalityLevel && kit.customerEmotion && kit.businessSize && kit.contentGoal;
+    if (step === 1) return kit.primaryVibe.length > 0 && kit.formalityLevel && kit.customerEmotion.length > 0 && kit.businessSize && kit.contentGoal.length > 0;
     if (step === 2) return !!kit.toneOfVoice;
     if (step === 3) return kit.ageRanges.length > 0 && kit.location;
     if (step === 4) return kit.whatYouDo && kit.whoYouServe && kit.howYouDiffer;
     if (step === 5) return !!kit.colorPalette;
-    if (step === 6) return kit.mission && kit.vision;
     return false;
   };
 
@@ -127,7 +121,7 @@ export default function BrandKitPage() {
                 <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "linear-gradient(135deg, #7B2FFF, #ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>✦</div>
                 <div>
                   <p style={{ fontSize: "0.72rem", color: "rgba(241,241,241,0.4)", fontWeight: 700, letterSpacing: "0.06em" }}>BRAND KIT</p>
-                  <p style={{ fontSize: "1.1rem", fontWeight: 800, color: "#F1F1F1" }}>{kit.primaryVibe} · {kit.toneOfVoice}</p>
+                  <p style={{ fontSize: "1.1rem", fontWeight: 800, color: "#F1F1F1" }}>{kit.primaryVibe.join(", ")} · {kit.toneOfVoice}</p>
                 </div>
               </div>
 
@@ -200,7 +194,7 @@ export default function BrandKitPage() {
 
             {/* Step tabs */}
             <div style={{ display: "flex", gap: "6px", marginTop: "16px" }}>
-              {["Personality", "Tone", "Audience", "Positioning", "Colours", "Mission"].map((s, i) => (
+              {["Personality", "Tone", "Audience", "Positioning", "Colours"].map((s, i) => (
                 <button
                   key={s}
                   onClick={() => i + 1 < step && setStep(i + 1)}
@@ -215,11 +209,11 @@ export default function BrandKitPage() {
           {/* ── STEP 1: Brand Personality ── */}
           {step === 1 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              <StepCard title="What's your brand's primary vibe?" icon="🎯">
-                <OptionGrid
+              <StepCard title="What's your brand's primary vibe?" icon="🎯" note="Select all that apply">
+                <MultiOptionGrid
                   options={["Inspiring", "Bold & Disruptive", "Professional", "Playful", "Elegant & Luxury"]}
                   selected={kit.primaryVibe}
-                  onSelect={(v) => set("primaryVibe", v)}
+                  onToggle={(v) => set("primaryVibe", kit.primaryVibe.includes(v) ? kit.primaryVibe.filter((x) => x !== v) : [...kit.primaryVibe, v])}
                 />
               </StepCard>
               <StepCard title="How formal is your communication style?" icon="🗣️">
@@ -229,11 +223,11 @@ export default function BrandKitPage() {
                   onSelect={(v) => set("formalityLevel", v)}
                 />
               </StepCard>
-              <StepCard title="What emotion should your audience feel?" icon="💡">
-                <OptionGrid
+              <StepCard title="What emotion should your audience feel?" icon="💡" note="Select all that apply">
+                <MultiOptionGrid
                   options={["Excited & Energised", "Trusted & Safe", "Inspired", "Empowered", "Entertained"]}
                   selected={kit.customerEmotion}
-                  onSelect={(v) => set("customerEmotion", v)}
+                  onToggle={(v) => set("customerEmotion", kit.customerEmotion.includes(v) ? kit.customerEmotion.filter((x) => x !== v) : [...kit.customerEmotion, v])}
                 />
               </StepCard>
               <StepCard title="What size is your business?" icon="🏢">
@@ -243,11 +237,11 @@ export default function BrandKitPage() {
                   onSelect={(v) => set("businessSize", v)}
                 />
               </StepCard>
-              <StepCard title="What's your #1 content goal?" icon="🚀">
-                <OptionGrid
+              <StepCard title="What are your content goals?" icon="🚀" note="Select all that apply">
+                <MultiOptionGrid
                   options={["Build Brand Awareness", "Drive Sales & Leads", "Build Community", "Educate My Audience", "Position as Expert"]}
                   selected={kit.contentGoal}
-                  onSelect={(v) => set("contentGoal", v)}
+                  onToggle={(v) => set("contentGoal", kit.contentGoal.includes(v) ? kit.contentGoal.filter((x) => x !== v) : [...kit.contentGoal, v])}
                 />
               </StepCard>
             </div>
@@ -372,53 +366,6 @@ export default function BrandKitPage() {
             </div>
           )}
 
-          {/* ── STEP 6: Mission + Vision ── */}
-          {step === 6 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div>
-                <label style={labelStyle}>BRAND MISSION — What do you do today?</label>
-                <textarea
-                  value={kit.mission}
-                  onChange={(e) => set("mission", e.target.value)}
-                  placeholder="e.g. We empower small business owners to show up consistently on social media without it taking over their lives."
-                  rows={3}
-                  style={{ ...inputStyle, resize: "vertical" }}
-                  onFocus={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.6)")}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>BRAND VISION — What are you building toward?</label>
-                <textarea
-                  value={kit.vision}
-                  onChange={(e) => set("vision", e.target.value)}
-                  placeholder="e.g. A world where every business, regardless of size or budget, has access to world-class content marketing."
-                  rows={3}
-                  style={{ ...inputStyle, resize: "vertical" }}
-                  onFocus={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.6)")}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>CORE VALUES (comma-separated)</label>
-                <input
-                  value={kit.values}
-                  onChange={(e) => set("values", e.target.value)}
-                  placeholder="e.g. Authenticity, Innovation, Simplicity, Results"
-                  style={inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.6)")}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")}
-                />
-                {kit.values && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", marginTop: "10px" }}>
-                    {kit.values.split(",").map((v) => v.trim()).filter(Boolean).map((v) => (
-                      <span key={v} style={{ padding: "4px 12px", borderRadius: "999px", background: "rgba(123,47,255,0.15)", border: "1px solid rgba(123,47,255,0.3)", fontSize: "0.78rem", color: "#a78bfa", fontWeight: 600 }}>{v}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* ── Navigation ── */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "36px", paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
@@ -456,13 +403,14 @@ export default function BrandKitPage() {
 }
 
 // ─── Sub-components ───────────────────────────────────────────
-function StepCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+function StepCard({ title, icon, note, children }: { title: string; icon: string; note?: string; children: React.ReactNode }) {
   return (
     <div style={{ background: "#1C1B2E", border: "1px solid rgba(123,47,255,0.15)", borderRadius: "14px", padding: "22px 24px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: note ? "4px" : "16px" }}>
         <span style={{ fontSize: "1.1rem" }}>{icon}</span>
         <p style={{ fontWeight: 700, color: "#F1F1F1", fontSize: "0.95rem" }}>{title}</p>
       </div>
+      {note && <p style={{ fontSize: "0.75rem", color: "rgba(167,139,250,0.6)", marginBottom: "14px", paddingLeft: "30px" }}>{note}</p>}
       {children}
     </div>
   );
@@ -477,6 +425,25 @@ function OptionGrid({ options, selected, onSelect }: { options: string[]; select
           <button
             key={opt}
             onClick={() => onSelect(opt)}
+            style={{ padding: "9px 16px", borderRadius: "10px", border: `1px solid ${active ? "rgba(123,47,255,0.6)" : "rgba(255,255,255,0.08)"}`, background: active ? "rgba(123,47,255,0.2)" : "rgba(255,255,255,0.03)", color: active ? "#a78bfa" : "rgba(241,241,241,0.6)", fontSize: "0.85rem", fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.18s" }}
+          >
+            {active ? "✓ " : ""}{opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MultiOptionGrid({ options, selected, onToggle }: { options: string[]; selected: string[]; onToggle: (v: string) => void }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+      {options.map((opt) => {
+        const active = selected.includes(opt);
+        return (
+          <button
+            key={opt}
+            onClick={() => onToggle(opt)}
             style={{ padding: "9px 16px", borderRadius: "10px", border: `1px solid ${active ? "rgba(123,47,255,0.6)" : "rgba(255,255,255,0.08)"}`, background: active ? "rgba(123,47,255,0.2)" : "rgba(255,255,255,0.03)", color: active ? "#a78bfa" : "rgba(241,241,241,0.6)", fontSize: "0.85rem", fontWeight: active ? 700 : 500, cursor: "pointer", transition: "all 0.18s" }}
           >
             {active ? "✓ " : ""}{opt}

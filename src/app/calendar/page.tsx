@@ -1,57 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppSidebar from "@/components/AppSidebar";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const PLATFORM_COLORS: Record<string, string> = {
-  Instagram: "#ec4899",
-  TikTok: "#00f2ea",
-  LinkedIn: "#60a5fa",
-  YouTube: "#f87171",
-  Facebook: "#818cf8",
+  instagram: "#ec4899",
+  tiktok: "#00f2ea",
+  linkedin: "#60a5fa",
+  youtube: "#f87171",
+  facebook: "#818cf8",
 };
 
-interface CalendarPost {
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+interface Post {
+  id: string;
   day: number;
   platform: string;
   hook: string;
+  caption: string;
+  cta: string;
+  hashtags: string;
+  format: string;
+  image_url?: string;
+  post_group?: number;
+  is_bonus: boolean;
 }
-
-// Posts mapped to days 1-30
-const POSTS: CalendarPost[] = [
-  { day: 1, platform: "Instagram", hook: "You're posting every day and still getting zero engagement." },
-  { day: 2, platform: "LinkedIn", hook: "I doubled our organic reach in 30 days without a single ad." },
-  { day: 3, platform: "TikTok", hook: "POV: Your content finally stops the scroll 👀" },
-  { day: 4, platform: "YouTube", hook: "This video format gets 3x more watch time than standard vlogs." },
-  { day: 5, platform: "Instagram", hook: "Your brand has a voice. Does your audience recognise it?" },
-  { day: 6, platform: "Facebook", hook: "The #1 reason your ads aren't converting (it's not budget)." },
-  { day: 7, platform: "LinkedIn", hook: "We went from 200 to 12,000 followers in 6 months." },
-  { day: 8, platform: "TikTok", hook: "What if your next viral video was already in your drafts?" },
-  { day: 9, platform: "Instagram", hook: "3 caption mistakes that are killing your reach right now." },
-  { day: 10, platform: "LinkedIn", hook: "The content format that generates 10x more engagement." },
-  { day: 11, platform: "TikTok", hook: "Nobody talks about this part of the algorithm — until now." },
-  { day: 12, platform: "YouTube", hook: "Stop creating content. Start building a content system." },
-  { day: 13, platform: "Instagram", hook: "This one reel structure tripled our saves last month." },
-  { day: 14, platform: "Facebook", hook: "Why your competitors are outranking you in the feed." },
-  { day: 15, platform: "LinkedIn", hook: "I analysed 100 viral posts. Here's what they all had in common." },
-  { day: 16, platform: "Instagram", hook: "The hook formula that works in every niche. Period." },
-  { day: 17, platform: "TikTok", hook: "If your content isn't doing this in 2 seconds, you've lost them." },
-  { day: 18, platform: "YouTube", hook: "Hot take: Your posting frequency means nothing." },
-  { day: 19, platform: "LinkedIn", hook: "We almost gave up on organic. Then this happened." },
-  { day: 20, platform: "Instagram", hook: "What a 50K account looks like vs what you imagine it does." },
-  { day: 21, platform: "Facebook", hook: "The real cost of bad content strategy (it's not what you think)." },
-  { day: 22, platform: "TikTok", hook: "This content type is getting pushed by every algorithm right now." },
-  { day: 23, platform: "Instagram", hook: "Your audience doesn't care about your product — until you do this." },
-  { day: 24, platform: "LinkedIn", hook: "The 80/20 rule of social media content that nobody applies." },
-  { day: 25, platform: "YouTube", hook: "Broke: Chasing trends. Woke: Being the trend." },
-  { day: 26, platform: "TikTok", hook: "Day 26 post — your most searched question, answered." },
-  { day: 27, platform: "Instagram", hook: "Here's what a content audit actually looks like (real numbers)." },
-  { day: 28, platform: "Facebook", hook: "We repurposed one blog post into 12 pieces of content." },
-  { day: 29, platform: "LinkedIn", hook: "The frameworks behind every high-performing B2B post." },
-  { day: 30, platform: "Instagram", hook: "You've made it 30 days. Here's what consistency actually builds." },
-];
 
 function getCalendarGrid(year: number, month: number) {
   const firstDay = new Date(year, month, 1).getDay();
@@ -72,11 +50,36 @@ export default function CalendarPage() {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [platforms, setPlatforms] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
+  useEffect(() => {
+    const brandId = typeof window !== "undefined" ? localStorage.getItem("dc_selected_brand") : null;
+    const url = brandId ? `/api/posts?brandId=${brandId}` : "/api/posts";
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        const fetched: Post[] = data?.posts ?? [];
+        // Only calendar posts (not bonus)
+        const calendarPosts = fetched.filter((p) => !p.is_bonus);
+        setPosts(calendarPosts);
+
+        // Derive unique platforms from actual posts
+        const uniquePlatforms = [...new Set(calendarPosts.map((p) => p.platform.toLowerCase()))];
+        setPlatforms(uniquePlatforms);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const cells = getCalendarGrid(viewYear, viewMonth);
-  const postMap: Record<number, CalendarPost[]> = {};
-  POSTS.forEach((p) => {
+
+  // Map day → posts (only regular calendar posts, day 1-30 mapped to current month)
+  const postMap: Record<number, Post[]> = {};
+  posts.forEach((p) => {
+    if (!p.day) return;
     if (!postMap[p.day]) postMap[p.day] = [];
     postMap[p.day].push(p);
   });
@@ -126,25 +129,28 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* Platform legend */}
-        <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-          {Object.entries(PLATFORM_COLORS).map(([name, color]) => (
-            <div key={name} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: color }} />
-              <span style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.5)", fontWeight: 500 }}>{name}</span>
-            </div>
-          ))}
-        </div>
+        {/* Platform legend — only platforms in actual posts */}
+        {!loading && platforms.length > 0 && (
+          <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+            {platforms.map((p) => (
+              <div key={p} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: PLATFORM_COLORS[p] ?? "#a78bfa" }} />
+                <span style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.5)", fontWeight: 500 }}>{capitalize(p)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {loading && (
+          <p style={{ color: "rgba(241,241,241,0.4)", fontSize: "0.9rem", marginBottom: "24px" }}>Loading your content...</p>
+        )}
 
         {/* Calendar grid */}
         <div style={{ background: "#1C1B2E", border: "1px solid rgba(123,47,255,0.15)", borderRadius: "20px", overflow: "hidden" }}>
           {/* Day headers */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             {DAYS_OF_WEEK.map((d) => (
-              <div
-                key={d}
-                style={{ padding: "14px 8px", textAlign: "center", fontSize: "0.75rem", fontWeight: 700, color: "rgba(241,241,241,0.35)", letterSpacing: "0.05em" }}
-              >
+              <div key={d} style={{ padding: "14px 8px", textAlign: "center", fontSize: "0.75rem", fontWeight: 700, color: "rgba(241,241,241,0.35)", letterSpacing: "0.05em" }}>
                 {d.toUpperCase()}
               </div>
             ))}
@@ -153,7 +159,7 @@ export default function CalendarPage() {
           {/* Cells */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
             {cells.map((day, idx) => {
-              const posts = day ? postMap[day] || [] : [];
+              const dayPosts = day ? (postMap[day] || []) : [];
               const isToday = day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
 
               return (
@@ -170,46 +176,23 @@ export default function CalendarPage() {
                 >
                   {day && (
                     <>
-                      <div
-                        style={{
-                          width: "24px",
-                          height: "24px",
-                          borderRadius: "50%",
-                          background: isToday ? "#7B2FFF" : "transparent",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "0.78rem",
-                          fontWeight: isToday ? 700 : 500,
-                          color: isToday ? "#fff" : "rgba(241,241,241,0.45)",
-                          marginBottom: "6px",
-                        }}
-                      >
+                      <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: isToday ? "#7B2FFF" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.78rem", fontWeight: isToday ? 700 : 500, color: isToday ? "#fff" : "rgba(241,241,241,0.45)", marginBottom: "6px" }}>
                         {day}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                        {posts.map((post, i) => (
-                          <div
-                            key={i}
-                            onClick={() => setSelectedPost(post)}
-                            style={{
-                              padding: "3px 6px",
-                              borderRadius: "5px",
-                              fontSize: "0.68rem",
-                              fontWeight: 600,
-                              color: "#fff",
-                              background: `${PLATFORM_COLORS[post.platform]}22`,
-                              borderLeft: `3px solid ${PLATFORM_COLORS[post.platform]}`,
-                              cursor: "pointer",
-                              overflow: "hidden",
-                              whiteSpace: "nowrap",
-                              textOverflow: "ellipsis",
-                            }}
-                            title={post.hook}
-                          >
-                            {post.platform}
-                          </div>
-                        ))}
+                        {dayPosts.map((post, i) => {
+                          const color = PLATFORM_COLORS[post.platform.toLowerCase()] ?? "#a78bfa";
+                          return (
+                            <div
+                              key={i}
+                              onClick={() => setSelectedPost(post)}
+                              style={{ padding: "3px 6px", borderRadius: "5px", fontSize: "0.68rem", fontWeight: 600, color: "#fff", background: `${color}22`, borderLeft: `3px solid ${color}`, cursor: "pointer", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}
+                              title={post.hook}
+                            >
+                              {capitalize(post.platform)}
+                            </div>
+                          );
+                        })}
                       </div>
                     </>
                   )}
@@ -225,72 +208,45 @@ export default function CalendarPage() {
       {/* Post detail modal */}
       {selectedPost && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: "24px",
-            backdropFilter: "blur(4px)",
-          }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "24px", backdropFilter: "blur(4px)" }}
           onClick={() => setSelectedPost(null)}
         >
           <div
-            style={{
-              background: "#1C1B2E",
-              border: "1px solid rgba(123,47,255,0.3)",
-              borderRadius: "20px",
-              padding: "32px",
-              maxWidth: "480px",
-              width: "100%",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
-            }}
+            style={{ background: "#1C1B2E", border: "1px solid rgba(123,47,255,0.3)", borderRadius: "20px", padding: "32px", maxWidth: "520px", width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.7)", maxHeight: "80vh", overflowY: "auto" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span
-                  style={{
-                    padding: "4px 12px",
-                    borderRadius: "999px",
-                    fontSize: "0.78rem",
-                    fontWeight: 700,
-                    color: PLATFORM_COLORS[selectedPost.platform],
-                    background: `${PLATFORM_COLORS[selectedPost.platform]}18`,
-                    border: `1px solid ${PLATFORM_COLORS[selectedPost.platform]}33`,
-                  }}
-                >
-                  {selectedPost.platform}
+                <span style={{ padding: "4px 12px", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 700, color: PLATFORM_COLORS[selectedPost.platform.toLowerCase()] ?? "#a78bfa", background: `${PLATFORM_COLORS[selectedPost.platform.toLowerCase()] ?? "#a78bfa"}18`, border: `1px solid ${PLATFORM_COLORS[selectedPost.platform.toLowerCase()] ?? "#a78bfa"}33` }}>
+                  {capitalize(selectedPost.platform)}
                 </span>
                 <span style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.35)", fontWeight: 600 }}>Day {selectedPost.day}</span>
+                <span style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.25)", fontWeight: 500 }}>{selectedPost.format}</span>
               </div>
-              <button
-                onClick={() => setSelectedPost(null)}
-                style={{ background: "transparent", border: "none", color: "rgba(241,241,241,0.4)", cursor: "pointer", fontSize: "20px", lineHeight: 1 }}
-              >
-                ×
-              </button>
+              <button onClick={() => setSelectedPost(null)} style={{ background: "transparent", border: "none", color: "rgba(241,241,241,0.4)", cursor: "pointer", fontSize: "20px", lineHeight: 1 }}>×</button>
             </div>
 
-            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(167,139,250,0.7)", letterSpacing: "0.06em", marginBottom: "8px" }}>
-              HOOK
-            </p>
-            <p style={{ fontSize: "1rem", fontWeight: 700, color: "#F1F1F1", lineHeight: 1.5, marginBottom: "20px" }}>
-              &ldquo;{selectedPost.hook}&rdquo;
-            </p>
+            {selectedPost.image_url && (
+              <img src={selectedPost.image_url} alt="Post visual" style={{ width: "100%", borderRadius: "12px", marginBottom: "20px", objectFit: "cover", maxHeight: "200px" }} />
+            )}
+
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(167,139,250,0.7)", letterSpacing: "0.06em", marginBottom: "6px" }}>HOOK</p>
+            <p style={{ fontSize: "1rem", fontWeight: 700, color: "#F1F1F1", lineHeight: 1.5, marginBottom: "16px" }}>&ldquo;{selectedPost.hook}&rdquo;</p>
+
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(167,139,250,0.7)", letterSpacing: "0.06em", marginBottom: "6px" }}>CAPTION</p>
+            <p style={{ fontSize: "0.88rem", color: "rgba(241,241,241,0.75)", lineHeight: 1.6, marginBottom: "16px" }}>{selectedPost.caption}</p>
+
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(167,139,250,0.7)", letterSpacing: "0.06em", marginBottom: "6px" }}>CTA</p>
+            <p style={{ fontSize: "0.88rem", color: "rgba(241,241,241,0.75)", marginBottom: "16px" }}>{selectedPost.cta}</p>
+
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(167,139,250,0.7)", letterSpacing: "0.06em", marginBottom: "6px" }}>HASHTAGS</p>
+            <p style={{ fontSize: "0.82rem", color: "rgba(167,139,250,0.6)", marginBottom: "20px" }}>{selectedPost.hashtags}</p>
 
             <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(123,47,255,0.15)", border: "1px solid rgba(123,47,255,0.3)", color: "#a78bfa", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}
-              >
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(123,47,255,0.15)", border: "1px solid rgba(123,47,255,0.3)", color: "#a78bfa", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}>
                 ✎ Edit Post
               </button>
-              <button
-                style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", color: "#34d399", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}
-              >
+              <button style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", color: "#34d399", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}>
                 ↗ Publish Now
               </button>
             </div>

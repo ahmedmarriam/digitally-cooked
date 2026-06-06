@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
@@ -12,6 +13,38 @@ const navItems = [
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [brands, setBrands] = useState<{id: string; brand_name: string; business_type: string}[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
+  const [plan, setPlan] = useState<string>("starter");
+
+  useEffect(() => {
+    // Fetch user plan
+    fetch("/api/user/me")
+      .then(r => r.json())
+      .then(data => { if (data.user?.plan) setPlan(data.user.plan); })
+      .catch(() => {});
+
+    // Fetch brands
+    fetch("/api/brands")
+      .then(r => r.json())
+      .then(data => {
+        if (data.brands?.length > 0) {
+          setBrands(data.brands);
+          const stored = localStorage.getItem("dc_selected_brand");
+          const valid = stored && data.brands.find((b: {id: string}) => b.id === stored);
+          setSelectedBrandId(valid ? stored : data.brands[0].id);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const canSwitchBrands = plan === "growth" || plan === "agency";
+
+  const switchBrand = (id: string) => {
+    setSelectedBrandId(id);
+    localStorage.setItem("dc_selected_brand", id);
+    window.location.reload();
+  };
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -79,6 +112,31 @@ export default function AppSidebar() {
           </span>
         </span>
       </a>
+
+      {/* Brand Switcher */}
+      {brands.length > 0 && (
+        <div style={{ marginBottom: "20px", padding: "0 8px" }}>
+          {canSwitchBrands && brands.length > 1 ? (
+            <div>
+              <p style={{ fontSize: "0.68rem", color: "rgba(241,241,241,0.35)", fontWeight: 700, letterSpacing: "0.06em", marginBottom: "6px", paddingLeft: "2px" }}>ACTIVE BRAND</p>
+              <select
+                value={selectedBrandId}
+                onChange={(e) => switchBrand(e.target.value)}
+                style={{ width: "100%", padding: "8px 10px", borderRadius: "8px", background: "rgba(123,47,255,0.08)", border: "1px solid rgba(123,47,255,0.2)", color: "#F1F1F1", fontSize: "0.82rem", fontWeight: 600, outline: "none", cursor: "pointer" }}
+              >
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id} style={{ background: "#1C1B2E" }}>{b.brand_name}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div style={{ padding: "8px 10px", borderRadius: "8px", background: "rgba(123,47,255,0.08)", border: "1px solid rgba(123,47,255,0.15)" }}>
+              <p style={{ fontSize: "0.68rem", color: "rgba(241,241,241,0.35)", fontWeight: 700, letterSpacing: "0.06em", marginBottom: "3px" }}>ACTIVE BRAND</p>
+              <p style={{ fontSize: "0.82rem", color: "#F1F1F1", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{brands[0].brand_name}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Nav */}
       <nav style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>

@@ -1,7 +1,7 @@
 # Digitally Cooked — Project Status
 
 **Last updated:** 2026-05-28  
-**Domain:** digitallycookedai.com  
+**Domain:** digitallycooked.com  
 **Stack:** Next.js 16.2.6 App Router + TypeScript  
 **Deploy:** Vercel (auto-deploy from GitHub `main`)
 

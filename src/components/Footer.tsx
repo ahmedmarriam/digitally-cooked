@@ -16,7 +16,7 @@ const footerLinks = {
   ],
   Support: [
     { label: "FAQ", href: "#faq" },
-    { label: "Contact Us", href: "mailto:hello@digitallycookedai.com" },
+    { label: "Contact Us", href: "mailto:hello@digitallycooked.com" },
     { label: "Privacy Policy", href: "#" },
     { label: "Terms of Service", href: "#" },
   ],
