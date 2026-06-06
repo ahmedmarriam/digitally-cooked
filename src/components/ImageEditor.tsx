@@ -290,7 +290,14 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
                   </div>
                 </div>
                 <div>
-                  <label style={LABEL}>TEXT POSITION — {textY === 0 ? "Top" : textY === 50 ? "Center" : textY === 100 ? "Bottom" : `${textY}%`}</label>
+                  <label style={LABEL}>TEXT POSITION — {textY === 0 ? "↑ Top" : textY === 50 ? "↕ Center" : textY === 100 ? "↓ Bottom" : `${textY}%`}</label>
+                  <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+                    {[["Top", 0], ["Center", 50], ["Bottom", 100]].map(([label, value]) => (
+                      <button key={label} onClick={() => setTextY(value as number)} style={{ flex: 1, padding: "6px", borderRadius: "6px", border: `1px solid ${textY === value ? "rgba(123,47,255,0.6)" : "rgba(255,255,255,0.08)"}`, background: textY === value ? "rgba(123,47,255,0.2)" : "rgba(255,255,255,0.03)", color: textY === value ? "#a78bfa" : "rgba(241,241,241,0.5)", fontSize: "0.7rem", fontWeight: textY === value ? 700 : 400, cursor: "pointer" }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                   <input type="range" min={0} max={100} step={5} value={textY} onChange={(e) => setTextY(Number(e.target.value))} style={{ width: "100%", accentColor: "#7B2FFF" }} />
                 </div>
                 <div>

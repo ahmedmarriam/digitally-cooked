@@ -182,7 +182,7 @@ async function renderImagePost(
 
   const pad = 72;
   const font = post.fontFamily ?? "Inter";
-  const hookFontSize = Math.floor(size * (post.hookFontScale ?? 0.065));
+  const hookFontSize = Math.floor(size * 0.065 * (post.hookFontScale ?? 1));
   const hookLineH = Math.floor(hookFontSize * 1.2);
   const capFontSize = Math.floor(size * 0.026);
   const capLineH = Math.floor(capFontSize * 1.45);
