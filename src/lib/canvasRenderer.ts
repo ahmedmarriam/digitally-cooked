@@ -59,6 +59,26 @@ function selectTemplate(postIndex: number): TemplateStyle {
   return cycle[(postIndex ?? 0) % cycle.length];
 }
 
+// Calculate text Y offset based on textY value (0-100)
+// textY: 0=top, 50=center, 100=bottom
+// contentHeight: approximate height of the text block
+function calculateTextYOffset(size: number, contentHeight: number, textY: number = 100): number {
+  const topSpace = 140;  // Space reserved at top
+  const bottomSpace = 180;  // Space reserved at bottom
+  const availableHeight = size - topSpace - bottomSpace;
+
+  // Default bottom positioning
+  const bottomY = size - bottomSpace;
+
+  // Top positioning
+  const topY = topSpace;
+
+  // Interpolate based on textY
+  return topY + (bottomY - topY) * (textY / 100);
+}
+
+
+
 // Load an image from URL into an HTMLImageElement
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -178,8 +198,11 @@ async function renderImagePost(
   const gapBetween = 18;
   const blockH = hookLineCount * hookLineH + gapBetween + capLineCount * capLineH + (capLineCount > 0 ? gapBetween : 0) + ctaHeight + 28;
 
-  // Start text at bottom, anchored so everything fits above the accent bar
-  let y = size - 5 - blockH;
+  // Position text based on textY: 0=top, 50=center, 100=bottom
+  const topY = pad + 20;
+  const bottomY = size - 5 - blockH;
+  const textYPos = post.textY ?? 100;  // Default to bottom
+  let y = topY + (bottomY - topY) * (textYPos / 100);
 
   // Optional backdrop for text readability
   if (post.textBackdrop) {
@@ -303,15 +326,21 @@ async function renderBold(ctx: CanvasRenderingContext2D, post: PostData, brand: 
   ctx.fillText(brand.name.toUpperCase().substring(0, 20), pad, 86);
   ctx.globalAlpha = 1;
 
+  // Calculate text Y position based on textY (0=top, 100=bottom)
+  const baseHookY = 195;
+  const textYPos = post.textY ?? 100;
+  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);  // Center point
+
   // Hook — large, punchy
   ctx.fillStyle = hookColor;
   ctx.font = `900 ${Math.floor(size * 0.07 * (post.hookFontScale ?? 1))}px ${font}, sans-serif`;
   ctx.textAlign = post.textAlign ?? "left";
-  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 70), pad, 195, size - pad * 2, Math.floor(size * 0.085 * (post.hookFontScale ?? 1)), 3, post.textAlign ?? "left");
+  const hookY = baseHookY + yOffset;
+  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 70), pad, hookY, size - pad * 2, Math.floor(size * 0.085 * (post.hookFontScale ?? 1)), 3, post.textAlign ?? "left");
   ctx.textAlign = "left";
 
   // Thin accent line after hook
-  const divY = 195 + hookLines * Math.floor(size * 0.085) + 28;
+  const divY = hookY + hookLines * Math.floor(size * 0.085) + 28;
   ctx.fillStyle = tc;
   ctx.globalAlpha = 0.35;
   ctx.fillRect(pad, divY, size * 0.22, 2);
@@ -382,18 +411,24 @@ async function renderGradient(ctx: CanvasRenderingContext2D, post: PostData, bra
   ctx.fillText(brand.name.toUpperCase().substring(0, 20), size / 2, 90);
   ctx.globalAlpha = 1;
 
+  // Calculate text Y position based on textY (0=top, 100=bottom)
+  const baseHookY = 280;
+  const textYPos = post.textY ?? 100;
+  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);
+
   // Hook (use textAlign if customized, else centered)
+  const hookY = baseHookY + yOffset;
   ctx.fillStyle = post.hookColor ?? tc;
   ctx.font = `900 ${Math.floor(size * 0.065 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Inter"}, sans-serif`;
   if (post.textAlign && post.textAlign !== "center") {
     // Use custom alignment
     ctx.textAlign = post.textAlign;
     const alignX = post.textAlign === "right" ? size - pad : pad;
-    wrapTextWithAlign(ctx, truncate(post.hook, 80), alignX, 280, size - pad * 2, Math.floor(size * 0.08), 3, post.textAlign);
+    wrapTextWithAlign(ctx, truncate(post.hook, 80), alignX, hookY, size - pad * 2, Math.floor(size * 0.08), 3, post.textAlign);
   } else {
     // Default centered
     ctx.textAlign = "center";
-    wrapTextCentered(ctx, truncate(post.hook, 80), size / 2, 280, size - pad * 2, Math.floor(size * 0.08), 3);
+    wrapTextCentered(ctx, truncate(post.hook, 80), size / 2, hookY, size - pad * 2, Math.floor(size * 0.08), 3);
   }
 
   // Caption (centered by default, respects showCaption flag)
@@ -401,13 +436,14 @@ async function renderGradient(ctx: CanvasRenderingContext2D, post: PostData, bra
     ctx.fillStyle = tc;
     ctx.globalAlpha = 0.78;
     ctx.font = `400 ${Math.floor(size * 0.027)}px Inter, sans-serif`;
+    const captionY = hookY + 250;  // Offset from hook
     if (post.textAlign && post.textAlign !== "center") {
       ctx.textAlign = post.textAlign;
       const alignX = post.textAlign === "right" ? size - pad : pad;
-      wrapTextWithAlign(ctx, truncate(post.caption, 100), alignX, 530, size - pad * 2, Math.floor(size * 0.034), 2, post.textAlign);
+      wrapTextWithAlign(ctx, truncate(post.caption, 100), alignX, captionY, size - pad * 2, Math.floor(size * 0.034), 2, post.textAlign);
     } else {
       ctx.textAlign = "center";
-      wrapTextCentered(ctx, truncate(post.caption, 100), size / 2, 530, size - pad * 2, Math.floor(size * 0.034), 2);
+      wrapTextCentered(ctx, truncate(post.caption, 100), size / 2, captionY, size - pad * 2, Math.floor(size * 0.034), 2);
     }
     ctx.globalAlpha = 1;
   }
@@ -485,15 +521,21 @@ async function renderSplit(ctx: CanvasRenderingContext2D, post: PostData, brand:
   ctx.letterSpacing = "0px";
   ctx.globalAlpha = 1;
 
+  // Calculate text Y position based on textY (0=top, 100=bottom)
+  const baseHookY = 210;
+  const textYPos = post.textY ?? 100;
+  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);
+
   // Left: hook — large and bold (use editor customizations)
+  const hookY = baseHookY + yOffset;
   ctx.fillStyle = post.hookColor ?? tc;
   ctx.font = `900 ${Math.floor(size * 0.064 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Inter"}, sans-serif`;
   ctx.textAlign = post.textAlign ?? "left";
-  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 65), pad, 210, splitX - pad * 1.6, Math.floor(size * 0.078), 3, post.textAlign ?? "left");
+  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 65), pad, hookY, splitX - pad * 1.6, Math.floor(size * 0.078), 3, post.textAlign ?? "left");
   ctx.textAlign = "left";
 
   // Left: thin divider after hook
-  const divY = 210 + hookLines * Math.floor(size * 0.078) + 24;
+  const divY = hookY + hookLines * Math.floor(size * 0.078) + 24;
   ctx.fillStyle = tc;
   ctx.globalAlpha = 0.35;
   ctx.fillRect(pad, divY, size * 0.18, 2);
@@ -561,17 +603,24 @@ async function renderEditorial(ctx: CanvasRenderingContext2D, post: PostData, br
   ctx.fillStyle = brand.primaryColor;
   ctx.fillRect(pad, 120, size * 0.2, 3);
 
+  // Calculate text Y position based on textY (0=top, 100=bottom)
+  const baseHookY = 280;
+  const textYPos = post.textY ?? 100;
+  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);
+
   // Hook (serif style, use editor customizations)
+  const hookY = baseHookY + yOffset;
   ctx.fillStyle = post.hookColor ?? "white";
   ctx.font = `800 ${Math.floor(size * 0.062 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Georgia"}, serif`;
   ctx.textAlign = post.textAlign ?? "left";
-  wrapTextWithAlign(ctx, truncate(post.hook, 90), pad, 280, size - pad * 2, Math.floor(size * 0.076), 3, post.textAlign ?? "left");
+  wrapTextWithAlign(ctx, truncate(post.hook, 90), pad, hookY, size - pad * 2, Math.floor(size * 0.076), 3, post.textAlign ?? "left");
   ctx.textAlign = "left";
 
-  // Secondary accent line
+  // Secondary accent line (offset based on hook)
+  const accentY = hookY + 170;
   ctx.fillStyle = brand.primaryColor;
   ctx.globalAlpha = 0.8;
-  ctx.fillRect(pad, 450, size * 0.18, 2);
+  ctx.fillRect(pad, accentY, size * 0.18, 2);
   ctx.globalAlpha = 1;
 
   // Caption (respects showCaption flag)
@@ -579,7 +628,8 @@ async function renderEditorial(ctx: CanvasRenderingContext2D, post: PostData, br
     ctx.fillStyle = "rgba(255,255,255,0.65)";
     ctx.font = `400 ${Math.floor(size * 0.026)}px Inter, sans-serif`;
     ctx.textAlign = post.textAlign ?? "left";
-    wrapTextWithAlign(ctx, truncate(post.caption, 90), pad, 500, size - pad * 2, Math.floor(size * 0.033), 2, post.textAlign ?? "left");
+    const captionY = accentY + 50;
+    wrapTextWithAlign(ctx, truncate(post.caption, 90), pad, captionY, size - pad * 2, Math.floor(size * 0.033), 2, post.textAlign ?? "left");
     ctx.textAlign = "left";
   }
 

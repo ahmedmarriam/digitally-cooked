@@ -80,6 +80,7 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
   const [showCaption, setShowCaption] = useState(true);
   const [textBackdrop, setTextBackdrop] = useState(false);
   const [template, setTemplate] = useState<"bold" | "gradient" | "split" | "editorial">("bold");
+  const [textY, setTextY] = useState(50);  // 0=top, 50=center, 100=bottom
 
   // Preview
   const [previewUrl, setPreviewUrl] = useState<string | null>(post.image_url ?? null);
@@ -117,9 +118,10 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
       textAlign,
       showCaption,
       textBackdrop,
+      textY,
       template,
     };
-  }, [hook, caption, cta, hookScale, hookColor, fontFamily, textAlign, showCaption, textBackdrop, template, post]);
+  }, [hook, caption, cta, hookScale, hookColor, fontFamily, textAlign, showCaption, textBackdrop, textY, template, post]);
 
   const renderPreview = useCallback(async () => {
     if (!brand) return;
@@ -141,7 +143,7 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => { renderPreview(); }, 500);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [hook, caption, cta, hookScale, hookColor, fontFamily, textAlign, showCaption, textBackdrop, template, renderPreview]);
+  }, [hook, caption, cta, hookScale, hookColor, fontFamily, textAlign, showCaption, textBackdrop, textY, template, renderPreview]);
 
   useEffect(() => { renderPreview(); }, []);
 
@@ -288,6 +290,10 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
                   </div>
                 </div>
                 <div>
+                  <label style={LABEL}>TEXT POSITION — {textY === 0 ? "Top" : textY === 50 ? "Center" : textY === 100 ? "Bottom" : `${textY}%`}</label>
+                  <input type="range" min={0} max={100} step={5} value={textY} onChange={(e) => setTextY(Number(e.target.value))} style={{ width: "100%", accentColor: "#7B2FFF" }} />
+                </div>
+                <div>
                   <button onClick={() => setShowCaption(!showCaption)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: `1px solid ${showCaption ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`, background: showCaption ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.03)", color: showCaption ? "#34d399" : "rgba(241,241,241,0.5)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
                     {showCaption ? "✓ Show caption" : "Hide caption"}
                   </button>
@@ -300,7 +306,7 @@ export default function ImageEditor({ post, brand, onClose, onSave }: Props) {
               </div>
             </div>
 
-            <button onClick={() => { setHook(post.hook ?? ""); setCaption(post.caption ?? ""); setCta(post.cta ?? ""); setHookScale(1.0); setHookColor("#ffffff"); setFontFamily("Inter"); setTextAlign("left"); setShowCaption(true); setTextBackdrop(false); setTemplate("bold"); }} style={{ padding: "8px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(241,241,241,0.35)", fontSize: "0.75rem", cursor: "pointer" }}>
+            <button onClick={() => { setHook(post.hook ?? ""); setCaption(post.caption ?? ""); setCta(post.cta ?? ""); setHookScale(1.0); setHookColor("#ffffff"); setFontFamily("Inter"); setTextAlign("left"); setTextY(50); setShowCaption(true); setTextBackdrop(false); setTemplate("bold"); }} style={{ padding: "8px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(241,241,241,0.35)", fontSize: "0.75rem", cursor: "pointer" }}>
               ↩ Reset all
             </button>
           </div>
