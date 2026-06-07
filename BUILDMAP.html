@@ -256,9 +256,12 @@
 <body>
 
   <h1>🍳 Digitally Cooked — Internal Build Map</h1>
-  <p class="subtitle">Last updated: June 2026 · Internal use only</p>
+  <p class="subtitle">Last updated: June 2026 · Internal use only · v2</p>
 
   <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(156,163,175,0.3)"></div> Evaluated / dropped</div>
+  </div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot dot-done"></div> Built & live</div>
     <div class="legend-item"><div class="legend-dot dot-building"></div> In progress / next up</div>
@@ -365,15 +368,15 @@
         <div class="arrow">→</div>
 
         <div class="node">
-          <div class="node-box building">
+          <div class="node-box done">
             <div class="node-icon">🖼️</div>
             <div class="node-title">Image Generation</div>
-            <div class="node-desc">60% image posts / 40% solid — swapping DALL-E → Flux.1</div>
-            <span class="node-badge badge-building">NEXT UP</span>
+            <div class="node-desc">60% image / 40% solid. DALL-E replaced by Flux.1-schnell via Together.ai</div>
+            <span class="node-badge badge-done">LIVE</span>
           </div>
           <div class="node-children">
-            <div class="child-box done">DALL-E (current)</div>
-            <div class="child-box new">Flux.1 Schnell (replacing)</div>
+            <div class="child-box" style="border-color:rgba(239,68,68,0.2);color:rgba(239,68,68,0.5);text-decoration:line-through;">DALL-E (replaced)</div>
+            <div class="child-box done">Flux.1-schnell ✓</div>
           </div>
         </div>
 
@@ -449,34 +452,34 @@
   <!-- PHASE 4 — IMMEDIATE BUILDS (NOW) -->
   <!-- ═══════════════════════════════════════════════════ -->
   <div class="phase" style="margin-top:16px;">
-    <div class="phase-label immediate">🟢 Phase 4 — Immediate Builds</div>
+    <div class="phase-label done">✅ Phase 4 — Immediate Builds — ALL COMPLETE</div>
     <div class="section">
-      <div class="section-title">Building Now — In Order</div>
+      <div class="section-title">Completed June 2026</div>
       <div class="grid-3">
 
         <div class="grid-item done">
           <div class="grid-item-title">✅ Emil Kowalski Skill</div>
-          <div class="grid-item-desc">UI polish enforcement installed. All new components reviewed against his standards automatically.</div>
+          <div class="grid-item-desc">UI polish enforcement installed globally. Every component we build is now reviewed against his animation, easing, timing, and taste standards automatically.</div>
         </div>
 
         <div class="grid-item done">
-          <div class="grid-item-title">✅ Competitor Intelligence Engine</div>
-          <div class="grid-item-desc">User pastes 2-3 competitor hooks. Claude extracts niche patterns — hook style, emotional triggers, content formats. Stored as niche_intelligence on brand.</div>
+          <div class="grid-item-title">✅ Competitor Intelligence — Per Platform</div>
+          <div class="grid-item-desc">User inputs 2-3 competitors per platform (Instagram/TikTok/LinkedIn/etc) and pastes their top hooks. Claude extracts niche patterns — hook style, emotional triggers, content format, hashtag strategy — calibrated specifically to each platform. Stored as niche_intelligence (per-platform JSON) on brand record. Never copies content — learns principles only.</div>
         </div>
 
         <div class="grid-item done">
           <div class="grid-item-title">✅ Niche-Calibrated Generation</div>
-          <div class="grid-item-desc">niche_intelligence fed into generate-posts prompt. Claude writes hooks calibrated to what works in this specific niche — 100% original, one level better than competitors.</div>
+          <div class="grid-item-desc">Per-platform niche_intelligence fed into generate-posts prompt. Instagram variations get Instagram niche calibration. LinkedIn gets LinkedIn calibration. Same brand, platform-optimised hooks. 100% original — one level better than competitors.</div>
         </div>
 
         <div class="grid-item done">
-          <div class="grid-item-title">✅ Virality Gate (Silent)</div>
-          <div class="grid-item-desc">After generation, Claude scores every hook. Anything below 70 gets auto-rewritten. Users only ever see the strongest version. Runs invisibly in the pipeline.</div>
+          <div class="grid-item-title">✅ Virality Gate (Silent Quality Filter)</div>
+          <div class="grid-item-desc">Runs after every generation batch. Claude scores every hook 0–100. Anything scoring below 70 is auto-rewritten before saving to Supabase. Users only ever see the strongest version. Non-fatal — falls back to original if it errors. Adds ~2-3s to pipeline, invisible to users.</div>
         </div>
 
-        <div class="grid-item new">
-          <div class="grid-item-title">⚡ Flux.1 Image Swap</div>
-          <div class="grid-item-desc">Replace DALL-E with Flux.1 Schnell via Together.ai. 13x cheaper, better quality. API key connected ✅</div>
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Flux.1-schnell — Replaced DALL-E</div>
+          <div class="grid-item-desc">DALL-E fully removed from both generate-images and generate-single-image routes. Replaced with Flux.1-schnell via Together.ai. $0.003/image vs $0.04–0.08 with DALL-E — 13x cheaper. API key live on Vercel. Together.ai account connected.</div>
         </div>
 
       </div>
@@ -564,16 +567,104 @@
   <div class="phase">
     <div class="phase-label done">⚙️ Current Tech Stack</div>
     <div class="section">
-      <div class="section-title">Infrastructure</div>
+      <div class="section-title">Infrastructure — Live</div>
       <div class="grid-3">
-        <div class="grid-item done"><div class="grid-item-title">Next.js 16 + React 19</div><div class="grid-item-desc">Frontend + API routes</div></div>
-        <div class="grid-item done"><div class="grid-item-title">Supabase</div><div class="grid-item-desc">Database + Storage + Auth</div></div>
-        <div class="grid-item done"><div class="grid-item-title">Vercel</div><div class="grid-item-desc">Hosting + env vars + deployments</div></div>
-        <div class="grid-item done"><div class="grid-item-title">Make.com</div><div class="grid-item-desc">Webhook automation — triggers post generation</div></div>
-        <div class="grid-item done"><div class="grid-item-title">Claude (Anthropic)</div><div class="grid-item-desc">Content generation + positioning statements</div></div>
-        <div class="grid-item building"><div class="grid-item-title">Together.ai + Flux.1</div><div class="grid-item-desc">Replacing DALL-E for image generation. API key live ✅</div></div>
-        <div class="grid-item new"><div class="grid-item-title">Open Generative AI</div><div class="grid-item-desc">Kling 3.0 video generation — Next Phase</div></div>
-        <div class="grid-item later"><div class="grid-item-title">LTX-2.3</div><div class="grid-item-desc">Self-hosted video engine — Later</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Next.js 16 + React 19</div><div class="grid-item-desc">Frontend + API routes. Deployed on Vercel.</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Supabase</div><div class="grid-item-desc">Database + Storage (post-images bucket) + Auth</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Vercel</div><div class="grid-item-desc">Hosting + env vars + CI/CD from GitHub</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Make.com</div><div class="grid-item-desc">7 HTTP webhook modules — triggers post + image generation pipeline</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Claude (Anthropic)</div><div class="grid-item-desc">Content generation, positioning statements, competitor analysis, virality gate</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Together.ai + Flux.1-schnell</div><div class="grid-item-desc">✅ LIVE — replaced DALL-E. $0.003/image. Account connected to Vercel. Startup accelerator application pending ($50K credits).</div></div>
+        <div class="grid-item new"><div class="grid-item-title">Open Generative AI (Next)</div><div class="grid-item-desc">Kling 3.0 image-to-video. 60+ models. Next.js VideoStudio component. Phase 5.</div></div>
+        <div class="grid-item later"><div class="grid-item-title">LTX-2.3 (Later)</div><div class="grid-item-desc">Self-hosted video engine. 4K, 9:16 portrait, audio sync. Free under $10M. Phase 6.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- TOOLS RESEARCH & DECISIONS -->
+  <div class="phase">
+    <div class="phase-label" style="background:rgba(156,163,175,0.1);color:#9ca3af;border:1px solid rgba(156,163,175,0.2);">🔬 Tools Researched — Decisions Log</div>
+    <div class="section">
+      <div class="section-title">Evaluated June 2026 — What We Chose and Why</div>
+      <div class="grid-3">
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Together.ai + Flux.1-schnell</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — replacing DALL-E.</strong> Apache 2.0 license. $0.003/image (13x cheaper). Black Forest Labs — serious credentialled team. Privacy: Together.ai does not train on API requests. Enterprise-safe. $5 deposit to unlock, startup program for $50K credits.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Open Generative AI (Anil-matcha)</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 5 video feature.</strong> MIT licensed, free. 200+ models, 60+ image-to-video (Kling 3.0, Wan 2.2, Seedance). Native Next.js VideoStudio component. Self-host or use muapi.ai. Replaces need for Higgsfield commercial subscription.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ LTX-2.3 (Lightricks)</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 6 self-hosted engine.</strong> Apache 2.0, free under $10M revenue. 22B params, 4K at 50fps, native 9:16 portrait, synchronized audio. Replaces Open Generative AI dependency at scale. ComfyUI + Hugging Face supported.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ OpenMontage</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 6 premium feature.</strong> Open source. 12 pipelines, 52 tools, 500+ agent skills. Full video production: script → voice → music → subtitles → render. Works with Claude Code. For "Brand Video" premium tier.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Emil Kowalski Skill</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN + INSTALLED.</strong> Free Claude Code skill. Encodes UI polish philosophy — animations, easing, taste. All components built from now on reviewed against his standards. From github.com/emilkowalski/skill.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Higgsfield Virality Predictor</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CONCEPT ADOPTED — built in-house.</strong> Higgsfield's commercial virality predictor inspired our silent virality gate. We built our own version using Claude instead of paying Higgsfield. Scores hooks 0–100, rewrites anything below 70 before saving.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ DALL-E (OpenAI)</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">REPLACED by Flux.1-schnell.</strong> Was: $0.04–0.08/image. Replaced with Flux.1-schnell at $0.003/image. 13x cost saving. Better quality for social media brand imagery. Both generate-images and generate-single-image routes updated.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Higgsfield.ai (commercial)</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — replaced by Open Generative AI.</strong> Paid commercial platform. Open Generative AI gives same capabilities (Kling 3.0, Veo, Wan 2.2) for free via MIT license with native Next.js components.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Uncensored.com</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — privacy risk.</strong> "No content filters" platform. No GDPR compliance clarity. No enterprise data handling guarantees. Not suitable for a SaaS serving business clients. Site also unreachable during evaluation.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ GodMod3.ai</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — wrong tool type.</strong> Browser-based chat interface, not a developer API. Solo developer maintainer (risk). The useful insight: it uses OpenRouter — which we noted as a future cost-saving option for LLM calls.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ BigCreator.in</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — no API.</strong> Indian content creator tool. No developer API to integrate. Paid only (₹999–₹2,499/month). Built for Hindi/Hinglish creators specifically. We're building better natively.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Poe</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — consumer app only.</strong> No developer API. Consumer chat aggregator. Doesn't reduce costs or add features to the platform.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Vulk.dev</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — not relevant.</strong> Tool for developers to deploy full-stack apps. We already have Vercel + Supabase. Adds nothing to user experience.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(156,163,175,0.15);background:rgba(156,163,175,0.03);">
+          <div class="grid-item-title" style="color:#9ca3af;">⏸️ Nvidia NIM</div>
+          <div class="grid-item-desc"><strong style="color:#9ca3af">DEFERRED — kept as backup.</strong> Enterprise-grade free AI APIs. Very safe and private ($3T company). Good fallback if Together.ai has downtime. Will add as secondary image generation option in Phase 5.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(156,163,175,0.15);background:rgba(156,163,175,0.03);">
+          <div class="grid-item-title" style="color:#9ca3af;">⏸️ OpenRouter (via GodMod3 insight)</div>
+          <div class="grid-item-desc"><strong style="color:#9ca3af">NOTED — future cost saving.</strong> Discovered via GodMod3 research. OpenRouter provides free Llama, Mistral, DeepSeek models via one API. Could replace Claude for non-critical tasks (hashtags, captions) to reduce LLM costs. Revisit in Phase 6.</div>
+        </div>
+
       </div>
     </div>
   </div>
