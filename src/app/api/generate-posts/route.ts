@@ -165,6 +165,27 @@ export async function POST(request: NextRequest) {
     const endGroup   = isBonus ? 10 : batchOffset + conceptsPerBatch;
     const endDay     = endGroup;
 
+    // Parse niche intelligence if available
+    let nicheContext = "";
+    if (brand.niche_intelligence) {
+      try {
+        const ni = typeof brand.niche_intelligence === "string"
+          ? JSON.parse(brand.niche_intelligence)
+          : brand.niche_intelligence;
+        nicheContext = `
+NICHE INTELLIGENCE (what works in this brand's niche — apply these patterns but make the content MORE original):
+- Hook patterns that work: ${ni.hookPatterns ?? ""}
+- Content formats that perform: ${ni.contentFormats ?? ""}
+- Emotional triggers that resonate: ${ni.emotionalTriggers ?? ""}
+- Tone that connects: ${ni.toneAndVoice ?? ""}
+- Hashtag strategy: ${ni.hashtagStrategy ?? ""}
+- Core insight: ${ni.whatMakesItWork ?? ""}
+- How to be better: ${ni.howToDoItBetter ?? ""}
+
+Apply these niche patterns to write hooks that ALREADY feel proven — but make them 100% original and true to this brand.`;
+      } catch { /* ignore parse errors */ }
+    }
+
     const platformStyleGuide = platformArray.map((p: string) => {
       const n = p.toLowerCase();
       if (n === "instagram") return "Instagram: punchy, emoji-friendly, story-driven";
@@ -223,7 +244,7 @@ Mission: ${brand.brand_mission ?? ""}
 Tone: ${brand.content_tone ?? ""}
 Colors: ${brand.brand_colors ?? ""}
 Goal: ${brand.monthly_goal ?? ""}
-Platforms: ${platformList}${brand.social_style_context ? `\n\nExisting social media style (IMPROVE on this):\n${brand.social_style_context}` : ""}${isBonus ? "\n\nBONUS posts — make them extra viral and high-engagement." : ""}`;
+Platforms: ${platformList}${nicheContext}${brand.social_style_context ? `\n\nExisting social media style (IMPROVE on this):\n${brand.social_style_context}` : ""}${isBonus ? "\n\nBONUS posts — make them extra viral and high-engagement." : ""}`;
 
     const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -267,6 +288,74 @@ Platforms: ${platformList}${brand.social_style_context ? `\n\nExisting social me
     }
 
     console.log(`Batch ${batchNum}: parsed ${conceptGroups.length} concepts (some may have been trimmed if truncated)`);
+
+    // ── VIRALITY GATE ─────────────────────────────────────────────
+    // Score all hooks in one Claude call. Rewrite any scoring below 70.
+    // This runs silently — users only ever see the improved version.
+    try {
+      const hookList = conceptGroups
+        .map((c, i) => `${i + 1}. [Group ${c.group}] ${c.variations?.[0]?.hook ?? ""}`)
+        .join("\n");
+
+      const viralityCheckPrompt = `You are a social media virality expert. Score each hook (0-100) and rewrite any scoring below 70.
+
+A strong hook (70+) must:
+- Stop the scroll in under 2 seconds
+- Create immediate curiosity, emotion, or recognition of a pain point
+- Be under 8 words and punchy
+- NOT start with "I", "We", or the brand name
+- NOT use generic phrases like "Check this out" or "You won't believe"
+
+Hooks to evaluate:
+${hookList}
+
+Brand context: ${brand.brand_name} — ${brand.business_description?.substring(0, 100) ?? ""}
+Tone: ${brand.content_tone ?? ""}${nicheContext ? `\nNiche patterns to apply: ${nicheContext.substring(0, 200)}` : ""}
+
+Return ONLY a JSON array with one object per hook:
+[{"index": 1, "score": 85, "rewrite": null}, {"index": 2, "score": 55, "rewrite": "The stronger rewritten hook here"}]
+
+If score >= 70, set rewrite to null. If score < 70, write a stronger hook in "rewrite".`;
+
+      const viralityRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5",
+          max_tokens: 1500,
+          messages: [{ role: "user", content: viralityCheckPrompt }],
+        }),
+      });
+
+      if (viralityRes.ok) {
+        const viralityData = await viralityRes.json();
+        const rawV = (viralityData.content?.[0]?.text ?? "")
+          .replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+        const arrayStart = rawV.indexOf("[");
+        if (arrayStart !== -1) {
+          const scores: { index: number; score: number; rewrite: string | null }[] =
+            JSON.parse(rawV.substring(arrayStart));
+          // Apply rewrites
+          for (const s of scores) {
+            const idx = s.index - 1;
+            if (s.rewrite && conceptGroups[idx]) {
+              for (const variation of conceptGroups[idx].variations ?? []) {
+                variation.hook = s.rewrite;
+              }
+            }
+          }
+          console.log(`Virality gate: ${scores.filter(s => s.rewrite).length} hooks improved out of ${scores.length}`);
+        }
+      }
+    } catch (viralityErr) {
+      // Non-fatal — log and continue with original hooks
+      console.warn("Virality gate skipped:", viralityErr);
+    }
+    // ── END VIRALITY GATE ─────────────────────────────────────────
 
     // Flatten into post rows
     const rows: Record<string, unknown>[] = [];

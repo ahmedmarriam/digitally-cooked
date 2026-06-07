@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
           logo_url: body.logoBase64 || body.logoFileName || null,
           caption_language: body.captionLanguage ?? "English",
           social_style_context: body.socialStyleContext ?? null,
+          niche_intelligence: body.nicheIntelligence ?? null,
           generation_status: "generating",
         })
         .select()
