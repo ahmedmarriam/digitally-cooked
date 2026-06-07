@@ -1,8 +1,9 @@
 /**
  * POST /api/generate-single-image
- * Generates a DALL-E image that matches the actual post content.
+ * Generates a Flux.1-schnell image (via Together.ai) matching the post content.
  * Uses hook + caption + brand context to build a specific, varied prompt.
  * Cycles through visual styles so images are never all the same type.
+ * 13x cheaper than DALL-E at $0.003/image.
  *
  * Body: { imagePrompt?, hook, caption, brandName, businessType, postIndex }
  * Returns: { imageUrl: string }
@@ -56,26 +57,27 @@ Strict rules — NO EXCEPTIONS:
 - Pure visual only — text will be added separately`.trim();
 }
 
-async function generateDalle(prompt: string, apiKey: string): Promise<string | null> {
+async function generateFlux(prompt: string, apiKey: string): Promise<string | null> {
   try {
-    const res = await fetch("https://api.openai.com/v1/images/generations", {
+    const res = await fetch("https://api.together.xyz/v1/images/generations", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-image-1",
+        model: "black-forest-labs/FLUX.1-schnell",
         prompt,
+        width: 1024,
+        height: 1024,
+        steps: 4,
         n: 1,
-        size: "1024x1024",
-        quality: "low",
       }),
     });
 
     if (!res.ok) {
       const text = await res.text();
-      console.error("DALL-E error:", res.status, text);
+      console.error("Flux error:", res.status, text);
       return null;
     }
 
@@ -85,15 +87,15 @@ async function generateDalle(prompt: string, apiKey: string): Promise<string | n
     if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
     return null;
   } catch (err) {
-    console.error("DALL-E fetch error:", err);
+    console.error("Flux fetch error:", err);
     return null;
   }
 }
 
 export async function POST(request: NextRequest) {
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (!openaiKey) {
-    return NextResponse.json({ error: "OpenAI API key not configured" }, { status: 500 });
+  const togetherKey = process.env.TOGETHER_API_KEY;
+  if (!togetherKey) {
+    return NextResponse.json({ error: "Together.ai API key not configured" }, { status: 500 });
   }
 
   let body: {
@@ -116,7 +118,7 @@ export async function POST(request: NextRequest) {
   }
 
   const prompt = buildPrompt(body);
-  const imageUrl = await generateDalle(prompt, openaiKey);
+  const imageUrl = await generateFlux(prompt, togetherKey);
 
   if (imageUrl) {
     return NextResponse.json({ imageUrl });

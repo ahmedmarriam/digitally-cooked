@@ -1,8 +1,9 @@
 /**
  * POST /api/generate-images
  * Uses the AI template engine to generate branded posts.
- * 60% image posts (DALL-E background + overlay), 40% solid templates.
+ * 60% image posts (Flux.1-schnell via Together.ai), 40% solid templates.
  * Bonus posts: 70% image, 30% solid.
+ * Cost: $0.003/image — 13x cheaper than DALL-E.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -17,30 +18,35 @@ import {
 
 export const maxDuration = 300;
 
-const DALLE_API_URL = "https://api.openai.com/v1/images/generations";
+const FLUX_API_URL = "https://api.together.xyz/v1/images/generations";
 const STORAGE_BUCKET = "post-images";
 
 let lastError = "";
 
-// ── DALL-E image generation ────────────────────────────────────
-async function generateDalleImage(
+// ── Flux.1-schnell image generation (via Together.ai) ─────────
+async function generateFluxImage(
   prompt: string,
-  size: "1024x1024",
   apiKey: string
 ): Promise<string | null> {
   try {
-    const res = await fetch(DALLE_API_URL, {
+    const res = await fetch(FLUX_API_URL, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "gpt-image-1", prompt, n: 1, size: "1024x1024", quality: "low" }),
+      body: JSON.stringify({
+        model: "black-forest-labs/FLUX.1-schnell",
+        prompt,
+        width: 1024,
+        height: 1024,
+        steps: 4,
+        n: 1,
+      }),
     });
     if (!res.ok) {
-      lastError = `DALL-E ${res.status}: ${await res.text()}`;
+      lastError = `Flux ${res.status}: ${await res.text()}`;
       console.error(lastError);
       return null;
     }
     const data = await res.json();
-    // gpt-image-1 returns base64, older models return url
     const item = data?.data?.[0];
     if (item?.url) return item.url;
     if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
@@ -86,9 +92,9 @@ async function uploadImage(buffer: Buffer, fileName: string): Promise<string | n
 
 // ── Main handler ───────────────────────────────────────────────
 export async function POST(request: NextRequest) {
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (!openaiKey) {
-    return NextResponse.json({ error: "OpenAI API key not configured." }, { status: 500 });
+  const togetherKey = process.env.TOGETHER_API_KEY;
+  if (!togetherKey) {
+    return NextResponse.json({ error: "Together.ai API key not configured." }, { status: 500 });
   }
 
   let brand_id: string | null = null;
@@ -185,7 +191,7 @@ export async function POST(request: NextRequest) {
       let imageBuffer: Buffer | null = null;
 
       if (useImage) {
-        const imageUrl = await generateDalleImage(post.image_prompt ?? "", "1024x1024", openaiKey);
+        const imageUrl = await generateFluxImage(post.image_prompt ?? "", togetherKey);
         if (imageUrl) imageBuffer = await fetchBuffer(imageUrl);
       }
 
