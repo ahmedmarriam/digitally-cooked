@@ -21,11 +21,13 @@ export async function POST(request: NextRequest) {
   }
 
   let competitors: Competitor[] = [];
+  let platform = "";
   try {
     const body = await request.json();
     competitors = (body.competitors ?? []).filter(
       (c: Competitor) => c.name?.trim() && c.posts?.trim()
     );
+    platform = body.platform ?? "";
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -38,7 +40,11 @@ export async function POST(request: NextRequest) {
     .map((c, i) => `COMPETITOR ${i + 1} — ${c.name}:\n${c.posts.trim()}`)
     .join("\n\n---\n\n");
 
-  const prompt = `You are a social media strategist analysing what makes content perform in a specific niche.
+  const platformContext = platform
+    ? `\nPLATFORM: ${platform} — focus your analysis on what specifically works on ${platform}. Hook styles, caption length, format preferences, and hashtag behaviour all differ by platform. Calibrate everything to ${platform}.`
+    : "";
+
+  const prompt = `You are a social media strategist analysing what makes content perform in a specific niche.${platformContext}
 
 Study the following competitor posts carefully. Do NOT copy any content. Instead, extract the underlying PRINCIPLES and PATTERNS that make this content work.
 

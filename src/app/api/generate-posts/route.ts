@@ -165,25 +165,54 @@ export async function POST(request: NextRequest) {
     const endGroup   = isBonus ? 10 : batchOffset + conceptsPerBatch;
     const endDay     = endGroup;
 
-    // Parse niche intelligence if available
-    let nicheContext = "";
+    // Parse niche intelligence — per platform if available, fallback to flat
+    let nicheByPlatform: Record<string, Record<string, string>> = {};
+    let nicheContext = ""; // fallback for prompt-level context
+
     if (brand.niche_intelligence) {
       try {
         const ni = typeof brand.niche_intelligence === "string"
           ? JSON.parse(brand.niche_intelligence)
           : brand.niche_intelligence;
-        nicheContext = `
-NICHE INTELLIGENCE (what works in this brand's niche — apply these patterns but make the content MORE original):
-- Hook patterns that work: ${ni.hookPatterns ?? ""}
-- Content formats that perform: ${ni.contentFormats ?? ""}
-- Emotional triggers that resonate: ${ni.emotionalTriggers ?? ""}
-- Tone that connects: ${ni.toneAndVoice ?? ""}
-- Hashtag strategy: ${ni.hashtagStrategy ?? ""}
-- Core insight: ${ni.whatMakesItWork ?? ""}
-- How to be better: ${ni.howToDoItBetter ?? ""}
 
-Apply these niche patterns to write hooks that ALREADY feel proven — but make them 100% original and true to this brand.`;
+        // Detect if it's per-platform (keys match platform names) or flat
+        const isPerPlatform = platformArray.some((p: string) =>
+          ni[p] || ni[p.toLowerCase()] || ni[p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()]
+        );
+
+        if (isPerPlatform) {
+          // Normalise keys to lowercase for easy lookup
+          for (const key of Object.keys(ni)) {
+            nicheByPlatform[key.toLowerCase()] = ni[key];
+          }
+        } else {
+          // Flat intelligence — apply to all platforms
+          nicheContext = `
+NICHE INTELLIGENCE (apply these patterns but make content MORE original):
+- Hook patterns: ${ni.hookPatterns ?? ""}
+- Content formats: ${ni.contentFormats ?? ""}
+- Emotional triggers: ${ni.emotionalTriggers ?? ""}
+- Tone: ${ni.toneAndVoice ?? ""}
+- Core insight: ${ni.whatMakesItWork ?? ""}
+- How to beat competitors: ${ni.howToDoItBetter ?? ""}`;
+        }
       } catch { /* ignore parse errors */ }
+    }
+
+    // Build per-platform niche context strings for the prompt
+    const platformNicheGuide = platformArray.map((p: string) => {
+      const key = p.toLowerCase();
+      const ni = nicheByPlatform[key];
+      if (!ni) return null;
+      return `${p} NICHE INTELLIGENCE:
+- Hook patterns: ${ni.hookPatterns ?? ""}
+- What works: ${ni.whatMakesItWork ?? ""}
+- How to beat competitors: ${ni.howToDoItBetter ?? ""}
+- Hashtag strategy: ${ni.hashtagStrategy ?? ""}`;
+    }).filter(Boolean).join("\n\n");
+
+    if (platformNicheGuide) {
+      nicheContext = `\n\nPER-PLATFORM NICHE INTELLIGENCE (apply per platform variation — keep content 100% original):\n${platformNicheGuide}`;
     }
 
     const platformStyleGuide = platformArray.map((p: string) => {
