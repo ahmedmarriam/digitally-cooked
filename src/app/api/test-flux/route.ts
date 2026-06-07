@@ -22,7 +22,7 @@ export async function GET() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "black-forest-labs/FLUX.1-schnell-Free",
+        model: "black-forest-labs/FLUX.1-schnell",
         prompt: "A vibrant, modern social media branded background, bold colors, clean minimal design, professional",
         width: 1024,
         height: 1024,
