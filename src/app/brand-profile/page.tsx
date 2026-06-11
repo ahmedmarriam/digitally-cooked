@@ -88,6 +88,14 @@ export default function BrandProfilePage() {
   });
 
   // Sync color swatches → form
+  // Auth guard — redirect to signup if not logged in
+  useEffect(() => {
+    const cookie = document.cookie.split("; ").find((c) => c.startsWith("dc_session="));
+    if (!cookie) {
+      router.push("/signup?redirect=/brand-profile");
+    }
+  }, [router]);
+
   useEffect(() => {
     // colors stored separately via colorSwatches state
   }, [colorSwatches]);

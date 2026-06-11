@@ -102,7 +102,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { batch = 1, brand_id } = body;
+    const { batch = 1, brand_id: raw_brand_id } = body;
+    // Sanitise brand_id — Make.com can forward "null" as a string
+    const brand_id = raw_brand_id && raw_brand_id !== "null" ? raw_brand_id : null;
     const batchNum = Number(batch);
     const isBonus = batchNum === 6;
 
