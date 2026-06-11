@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digitally Cooked — Internal Build Map</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0612;
+      color: #f1f1f1;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 40px 24px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #a78bfa;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(241,241,241,0.4);
+      margin-bottom: 48px;
+    }
+
+    /* PHASE HEADER */
+    .phase {
+      margin-bottom: 48px;
+    }
+    .phase-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+    .phase-label.immediate { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .phase-label.next      { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .phase-label.later     { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+    .phase-label.done      { background: rgba(156,163,175,0.1); color: #9ca3af; border: 1px solid rgba(156,163,175,0.2); }
+
+    /* FLOW ROW */
+    .flow-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+
+    /* NODE */
+    .node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .node-box {
+      background: #130d24;
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 12px;
+      padding: 14px 18px;
+      min-width: 160px;
+      max-width: 200px;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+    .node-box:hover {
+      border-color: rgba(167,139,250,0.5);
+      box-shadow: 0 0 20px rgba(167,139,250,0.1);
+    }
+    .node-box.done {
+      border-color: rgba(34,197,94,0.3);
+      background: rgba(34,197,94,0.05);
+    }
+    .node-box.done:hover { border-color: rgba(34,197,94,0.5); }
+    .node-box.building {
+      border-color: rgba(251,191,36,0.4);
+      background: rgba(251,191,36,0.05);
+    }
+    .node-box.new {
+      border-color: rgba(99,102,241,0.35);
+      background: rgba(99,102,241,0.05);
+    }
+
+    .node-icon { font-size: 1.3rem; margin-bottom: 6px; }
+    .node-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #f1f1f1;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .node-desc {
+      font-size: 0.68rem;
+      color: rgba(241,241,241,0.45);
+      line-height: 1.4;
+    }
+    .node-badge {
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 100px;
+      margin-top: 8px;
+      display: inline-block;
+    }
+    .badge-done    { background: rgba(34,197,94,0.2);   color: #4ade80; }
+    .badge-building{ background: rgba(251,191,36,0.2);  color: #fbbf24; }
+    .badge-new     { background: rgba(99,102,241,0.2);  color: #818cf8; }
+    .badge-next    { background: rgba(251,191,36,0.15); color: #fbbf24; }
+
+    /* ARROW */
+    .arrow {
+      display: flex;
+      align-items: center;
+      padding: 0 6px;
+      margin-top: 28px;
+      color: rgba(167,139,250,0.4);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .arrow.down {
+      padding: 4px 0;
+      margin-top: 0;
+      font-size: 1rem;
+      justify-content: center;
+      width: 100%;
+      color: rgba(167,139,250,0.3);
+    }
+
+    /* SUB NODES — children hanging below a node */
+    .node-children {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .child-box {
+      background: #0e0920;
+      border: 1px solid rgba(167,139,250,0.12);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.68rem;
+      color: rgba(241,241,241,0.6);
+      text-align: center;
+      min-width: 110px;
+    }
+    .child-box.done  { border-color: rgba(34,197,94,0.2);  color: #86efac; }
+    .child-box.new   { border-color: rgba(99,102,241,0.2); color: #a5b4fc; }
+
+    /* LEGEND */
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: rgba(241,241,241,0.5);
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 3px;
+    }
+    .dot-done     { background: rgba(34,197,94,0.4); }
+    .dot-building { background: rgba(251,191,36,0.4); }
+    .dot-new      { background: rgba(99,102,241,0.4); }
+    .dot-planned  { background: rgba(167,139,250,0.2); }
+
+    /* VERTICAL STACK */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* WIDE SECTION */
+    .section {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(241,241,241,0.3);
+      margin-bottom: 16px;
+    }
+
+    /* GRID */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .grid-item {
+      background: #130d24;
+      border: 1px solid rgba(167,139,250,0.15);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .grid-item.done  { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.04); }
+    .grid-item.new   { border-color: rgba(99,102,241,0.25); background: rgba(99,102,241,0.04); }
+    .grid-item.later { border-color: rgba(167,139,250,0.15); }
+
+    .grid-item-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .grid-item-desc {
+      font-size: 0.67rem;
+      color: rgba(241,241,241,0.4);
+      line-height: 1.4;
+    }
+
+    hr.divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin: 32px 0;
+    }
+
+    .big-arrow {
+      text-align: center;
+      font-size: 1.4rem;
+      color: rgba(167,139,250,0.3);
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🍳 Digitally Cooked — Internal Build Map</h1>
+  <p class="subtitle">Last updated: June 2026 · Internal use only · v2</p>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(156,163,175,0.3)"></div> Evaluated / dropped</div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-done"></div> Built & live</div>
+    <div class="legend-item"><div class="legend-dot dot-building"></div> In progress / next up</div>
+    <div class="legend-item"><div class="legend-dot dot-new"></div> New feature to build</div>
+    <div class="legend-item"><div class="legend-dot dot-planned"></div> Planned / later</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- PHASE 1 — ONBOARDING -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-label done">✅ Phase 1 — Onboarding</div>
+    <div class="section">
+      <div class="section-title">User Journey: Entry</div>
+      <div class="flow-row" style="justify-content:center; flex-wrap:wrap; gap:0;">
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">🔐</div>
+            <div class="node-title">Sign Up / Login</div>
+            <div class="node-desc">Email auth via Supabase</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">🌐</div>
+            <div class="node-title">Website Scanner</div>
+            <div class="node-desc">Auto-fills brand fields from URL</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">📋</div>
+            <div class="node-title">Brand Profile</div>
+            <div class="node-desc">8 sections: personality, voice, audience, story, strategy, identity</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+          <div class="node-children">
+            <div class="child-box done">Who You Are</div>
+            <div class="child-box done">Brand Personality</div>
+            <div class="child-box done">Your Voice</div>
+            <div class="child-box done">Your Audience</div>
+            <div class="child-box done">Brand Story</div>
+            <div class="child-box done">Content Strategy</div>
+            <div class="child-box done">Brand Identity</div>
+            <div class="child-box done">Social Scanner</div>
+          </div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">🎯</div>
+            <div class="node-title">Positioning Statement</div>
+            <div class="node-desc">Claude generates from all answers — no templates</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="big-arrow">↓</div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- PHASE 2 — CONTENT GENERATION -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="phase" style="margin-top:16px;">
+    <div class="phase-label done">✅ Phase 2 — Content Generation</div>
+    <div class="section">
+      <div class="section-title">Post Generation Pipeline</div>
+      <div class="flow-row" style="justify-content:center; flex-wrap:wrap; gap:0;">
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">⚡</div>
+            <div class="node-title">Make.com Webhook</div>
+            <div class="node-desc">Triggers on brand profile submit, passes brand_id</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">✍️</div>
+            <div class="node-title">Generate Posts</div>
+            <div class="node-desc">Claude writes 8 regular + 10 bonus posts with hooks, captions, CTAs</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">🖼️</div>
+            <div class="node-title">Image Generation</div>
+            <div class="node-desc">60% image / 40% solid. DALL-E replaced by Flux.1-schnell via Together.ai</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+          <div class="node-children">
+            <div class="child-box" style="border-color:rgba(239,68,68,0.2);color:rgba(239,68,68,0.5);text-decoration:line-through;">DALL-E (replaced)</div>
+            <div class="child-box done">Flux.1-schnell ✓</div>
+          </div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">🎨</div>
+            <div class="node-title">Canvas Renderer</div>
+            <div class="node-desc">4 templates: Bold, Gradient, Split, Editorial</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="node">
+          <div class="node-box done">
+            <div class="node-icon">☁️</div>
+            <div class="node-title">Supabase Storage</div>
+            <div class="node-desc">Rendered images stored in post-images bucket</div>
+            <span class="node-badge badge-done">LIVE</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="big-arrow">↓</div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- PHASE 3 — DASHBOARD -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="phase" style="margin-top:16px;">
+    <div class="phase-label done">✅ Phase 3 — Dashboard</div>
+    <div class="section">
+      <div class="section-title">User Dashboard Features</div>
+      <div class="grid-3">
+
+        <div class="grid-item done">
+          <div class="grid-item-title">📊 Post Cards</div>
+          <div class="grid-item-desc">View all 18 posts, regular + bonus, with image preview</div>
+        </div>
+        <div class="grid-item done">
+          <div class="grid-item-title">✏️ Image Editor</div>
+          <div class="grid-item-desc">Font, color, alignment, template, text position sliders</div>
+        </div>
+        <div class="grid-item done">
+          <div class="grid-item-title">🔄 Regenerate</div>
+          <div class="grid-item-desc">10 shared regens per brand per month</div>
+        </div>
+        <div class="grid-item done">
+          <div class="grid-item-title">📅 Calendar View</div>
+          <div class="grid-item-desc">Schedule and plan posts visually</div>
+        </div>
+        <div class="grid-item done">
+          <div class="grid-item-title">⬇️ Download</div>
+          <div class="grid-item-desc">Export individual posts as images</div>
+        </div>
+        <div class="grid-item new">
+          <div class="grid-item-title">🔥 Virality Score</div>
+          <div class="grid-item-desc">Claude scores hook strength, curiosity, clarity, CTA before download</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="big-arrow">↓</div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- PHASE 4 — IMMEDIATE BUILDS (NOW) -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="phase" style="margin-top:16px;">
+    <div class="phase-label done">✅ Phase 4 — Immediate Builds — ALL COMPLETE</div>
+    <div class="section">
+      <div class="section-title">Completed June 2026</div>
+      <div class="grid-3">
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Emil Kowalski Skill</div>
+          <div class="grid-item-desc">UI polish enforcement installed globally. Every component we build is now reviewed against his animation, easing, timing, and taste standards automatically.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Competitor Intelligence — Per Platform</div>
+          <div class="grid-item-desc">User inputs 2-3 competitors per platform (Instagram/TikTok/LinkedIn/etc) and pastes their top hooks. Claude extracts niche patterns — hook style, emotional triggers, content format, hashtag strategy — calibrated specifically to each platform. Stored as niche_intelligence (per-platform JSON) on brand record. Never copies content — learns principles only.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Niche-Calibrated Generation</div>
+          <div class="grid-item-desc">Per-platform niche_intelligence fed into generate-posts prompt. Instagram variations get Instagram niche calibration. LinkedIn gets LinkedIn calibration. Same brand, platform-optimised hooks. 100% original — one level better than competitors.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Virality Gate (Silent Quality Filter)</div>
+          <div class="grid-item-desc">Runs after every generation batch. Claude scores every hook 0–100. Anything scoring below 70 is auto-rewritten before saving to Supabase. Users only ever see the strongest version. Non-fatal — falls back to original if it errors. Adds ~2-3s to pipeline, invisible to users.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Flux.1-schnell — Replaced DALL-E</div>
+          <div class="grid-item-desc">DALL-E fully removed from both generate-images and generate-single-image routes. Replaced with Flux.1-schnell via Together.ai. $0.003/image vs $0.04–0.08 with DALL-E — 13x cheaper. API key live on Vercel. Together.ai account connected.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="big-arrow">↓</div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- PHASE 5 — NEXT BUILDS -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="phase" style="margin-top:16px;">
+    <div class="phase-label next">🟡 Phase 5 — Next Builds</div>
+    <div class="section">
+      <div class="section-title">Video Generation — Finalized June 2026</div>
+      <div class="grid-3">
+
+        <div class="grid-item new">
+          <div class="grid-item-title">🎬 Video Engine — LTX Studio Standard</div>
+          <div class="grid-item-desc"><strong style="color:#a78bfa">CHOSEN for Phase 5 launch.</strong> $35/month subscription. 28,800 computing seconds. Commercial rights included. Simple API call from Next.js — no infrastructure setup. LTX-2.3-fast model. 5-sec 9:16 portrait videos, native audio. ~$0.03/video at our volumes.</div>
+        </div>
+
+        <div class="grid-item new">
+          <div class="grid-item-title">🎬 Video Tiers (Finalized)</div>
+          <div class="grid-item-desc">
+            Starter: <strong>4 videos/month</strong><br/>
+            Growth: <strong>10 videos/month</strong><br/>
+            Pro: <strong>20 videos/month</strong><br/>
+            Agency: <strong>60 videos/month</strong><br/>
+            <br/>Cost at $0.03/video: Starter $0.12 · Agency $1.80/user/month. Video cost = &lt;1% of revenue at all tiers.
+          </div>
+        </div>
+
+        <div class="grid-item new">
+          <div class="grid-item-title">🔒 Video Testing Toggle</div>
+          <div class="grid-item-desc"><strong style="color:#f59e0b">LIVE — gated OFF.</strong> ENABLE_VIDEO_GENERATION=false in Vercel env. /api/generate-video endpoint deployed but returns {skipped:true} during testing. Zero credits burned. Flip to true + add LTX_API_KEY to activate. Platform-aware prompts: Instagram, TikTok, LinkedIn, Facebook, YouTube.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="big-arrow">↓</div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- PHASE 6 — LATER / PREMIUM -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="phase" style="margin-top:16px;">
+    <div class="phase-label later">🔵 Phase 6 — Later / Premium Tier</div>
+    <div class="section">
+      <div class="section-title">Scale & Own Everything</div>
+      <div class="grid-3">
+
+        <div class="grid-item later">
+          <div class="grid-item-title">🚀 Wan2GP Migration (deepbeepmeep)</div>
+          <div class="grid-item-desc"><strong style="color:#60a5fa">CHOSEN for Phase 6 scale.</strong> Wan2GP by Wassim Younes (deepbeepmeep). Runs Wan 2.6 + LTX-2 locally. Self-hosted on RunPod GPU (~$0.34/hr). Cost: $0.006/video. At 100 users: $7.20/month total video cost. Fully private — data never leaves server. Apache 2.0 free. Replaces LTX Standard API when volume justifies it.</div>
+        </div>
+
+        <div class="grid-item later">
+          <div class="grid-item-title">🎞️ SkyReels V4 (Future Option)</div>
+          <div class="grid-item-desc">Evaluated June 2026. Best for human-centric video — 33 facial expressions, 400+ natural movements, Hollywood-trained. Joint audio-video generation. Apache 2.0. Consider adding as premium option for brands that feature real people (coaches, fitness, personal brand). $0.30/video via piapi.ai.</div>
+        </div>
+
+        <div class="grid-item later">
+          <div class="grid-item-title">📈 Analytics Dashboard</div>
+          <div class="grid-item-desc">Track post performance after publishing. Virality score vs actual engagement. Learn what works.</div>
+        </div>
+
+        <div class="grid-item later">
+          <div class="grid-item-title">👥 Multi-Brand</div>
+          <div class="grid-item-desc">Agency tier — manage multiple brand profiles from one account.</div>
+        </div>
+
+        <div class="grid-item later">
+          <div class="grid-item-title">📱 Direct Publishing</div>
+          <div class="grid-item-desc">Connect Instagram, TikTok, LinkedIn. Post directly from dashboard.</div>
+        </div>
+
+        <div class="grid-item later">
+          <div class="grid-item-title">🗺️ User Flowchart</div>
+          <div class="grid-item-desc">The public-facing version of this map. Shows users the platform journey beautifully.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- TECH STACK -->
+  <div class="phase">
+    <div class="phase-label done">⚙️ Current Tech Stack</div>
+    <div class="section">
+      <div class="section-title">Infrastructure — Live</div>
+      <div class="grid-3">
+        <div class="grid-item done"><div class="grid-item-title">Next.js 16 + React 19</div><div class="grid-item-desc">Frontend + API routes. Deployed on Vercel.</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Supabase</div><div class="grid-item-desc">Database + Storage (post-images bucket) + Auth</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Vercel</div><div class="grid-item-desc">Hosting + env vars + CI/CD from GitHub</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Make.com</div><div class="grid-item-desc">7 HTTP webhook modules — triggers post + image generation pipeline</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Claude (Anthropic)</div><div class="grid-item-desc">Content generation, positioning statements, competitor analysis, virality gate</div></div>
+        <div class="grid-item done"><div class="grid-item-title">Together.ai + Flux.1-schnell</div><div class="grid-item-desc">✅ LIVE — replaced DALL-E. $0.003/image. Account connected to Vercel. Startup accelerator application pending ($50K credits).</div></div>
+        <div class="grid-item new"><div class="grid-item-title">LTX Studio Standard — Video (Phase 5)</div><div class="grid-item-desc">$35/month. LTX-2.3-fast. 9:16 portrait. Native audio. Toggle gated OFF during testing. Activate: ENABLE_VIDEO_GENERATION=true + LTX_API_KEY in Vercel.</div></div>
+        <div class="grid-item later"><div class="grid-item-title">Wan2GP by deepbeepmeep (Phase 6)</div><div class="grid-item-desc">Self-hosted on RunPod. Wan 2.6 + LTX-2. $0.006/video. ~$7.20/month at 100 users. Fully private. Apache 2.0.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- TOOLS RESEARCH & DECISIONS -->
+  <div class="phase">
+    <div class="phase-label" style="background:rgba(156,163,175,0.1);color:#9ca3af;border:1px solid rgba(156,163,175,0.2);">🔬 Tools Researched — Decisions Log</div>
+    <div class="section">
+      <div class="section-title">Evaluated June 2026 — What We Chose and Why</div>
+      <div class="grid-3">
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Together.ai + Flux.1-schnell</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — replacing DALL-E.</strong> Apache 2.0 license. $0.003/image (13x cheaper). Black Forest Labs — serious credentialled team. Privacy: Together.ai does not train on API requests. Enterprise-safe. $5 deposit to unlock, startup program for $50K credits.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ LTX Studio Standard — Phase 5 Video</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 5 launch video engine.</strong> $35/month subscription. Commercial rights included. LTX-2.3-fast model. 5-sec 9:16 portrait, native audio. ~$0.03/video. Simple API — no infrastructure. Toggle gated OFF during testing (ENABLE_VIDEO_GENERATION=false). Endpoint: /api/generate-video live on Vercel.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Wan2GP by deepbeepmeep — Phase 6</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 6 scale migration.</strong> By Wassim Younes (@deepbeepmeep). Runs Wan 2.6 + LTX-2 locally. Self-hosted on RunPod GPU ($0.34/hr). $0.006/video — effectively free. At 100 users: $7.20/month total. Fully private (data never leaves server). Apache 2.0. 6GB VRAM minimum. Mac M4 support (experimental).</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ OpenMontage</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — redundant.</strong> LTX Studio already covers the full production pipeline: script → storyboard → keyframe animation → sound → timeline → ad/trailer/music video output. OpenMontage adds nothing we don't already have at $35/month.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Emil Kowalski Skill</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN + INSTALLED.</strong> Free Claude Code skill. Encodes UI polish philosophy — animations, easing, taste. All components built from now on reviewed against his standards. From github.com/emilkowalski/skill.</div>
+        </div>
+
+        <div class="grid-item done">
+          <div class="grid-item-title">✅ Higgsfield Virality Predictor</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CONCEPT ADOPTED — built in-house.</strong> Higgsfield's commercial virality predictor inspired our silent virality gate. We built our own version using Claude instead of paying Higgsfield. Scores hooks 0–100, rewrites anything below 70 before saving.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ DALL-E (OpenAI)</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">REPLACED by Flux.1-schnell.</strong> Was: $0.04–0.08/image. Replaced with Flux.1-schnell at $0.003/image. 13x cost saving. Better quality for social media brand imagery. Both generate-images and generate-single-image routes updated.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Higgsfield.ai (commercial)</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — paid platform, misleading "free" claims.</strong> Starts at $9/month, barely 2-3 quality videos. No free tier. The "free Higgsfield" creators talk about is Open Generative AI (Anil-matcha's repo) — a separate open-source alternative. Higgsfield CLI connects to their paid API, not a free model. Replaced by LTX Studio Standard + Wan2GP.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Open Generative AI via muapi.ai</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED for production — privacy concern.</strong> Platform (Anil-matcha repo) is MIT licensed and free. BUT premium models (Kling, Veo, Sora) route through muapi.ai servers — brand data leaves our control. Not acceptable for a SaaS serving business brands. Good for personal use only. Use Wan2GP self-hosted instead for full privacy.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ OpenArt ($14.50/month)</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">EVALUATED — dropped for privacy.</strong> Multi-model platform (Kling, Veo, Wan, LTX, 100+ models). $14.50/month annual = 150 videos = $0.097/video. Great value BUT brand data goes through OpenArt's servers. Not acceptable for commercial SaaS. LTX Studio Standard wins on both cost and data control.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(156,163,175,0.15);background:rgba(156,163,175,0.03);">
+          <div class="grid-item-title" style="color:#9ca3af;">⏸️ SkyReels V4</div>
+          <div class="grid-item-desc"><strong style="color:#9ca3af">EVALUATED — deferred as future option.</strong> Best for human-centric video (coaches, fitness, personal brands). 33 facial expressions, 400+ natural movements. Hollywood-trained. Joint audio+video. Apache 2.0. $0.30/video via piapi.ai or self-hosted free. Consider adding as premium option in Phase 7 for brands featuring real people.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Uncensored.com</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — privacy risk.</strong> "No content filters" platform. No GDPR compliance clarity. No enterprise data handling guarantees. Not suitable for a SaaS serving business clients. Site also unreachable during evaluation.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ GodMod3.ai</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — wrong tool type.</strong> Browser-based chat interface, not a developer API. Solo developer maintainer (risk). The useful insight: it uses OpenRouter — which we noted as a future cost-saving option for LLM calls.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ BigCreator.in</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — no API.</strong> Indian content creator tool. No developer API to integrate. Paid only (₹999–₹2,499/month). Built for Hindi/Hinglish creators specifically. We're building better natively.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Poe</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — consumer app only.</strong> No developer API. Consumer chat aggregator. Doesn't reduce costs or add features to the platform.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Vulk.dev</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — not relevant.</strong> Tool for developers to deploy full-stack apps. We already have Vercel + Supabase. Adds nothing to user experience.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(156,163,175,0.15);background:rgba(156,163,175,0.03);">
+          <div class="grid-item-title" style="color:#9ca3af;">⏸️ Nvidia NIM</div>
+          <div class="grid-item-desc"><strong style="color:#9ca3af">DEFERRED — kept as backup.</strong> Enterprise-grade free AI APIs. Very safe and private ($3T company). Good fallback if Together.ai has downtime. Will add as secondary image generation option in Phase 5.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(156,163,175,0.15);background:rgba(156,163,175,0.03);">
+          <div class="grid-item-title" style="color:#9ca3af;">⏸️ OpenRouter (via GodMod3 insight)</div>
+          <div class="grid-item-desc"><strong style="color:#9ca3af">NOTED — future cost saving.</strong> Discovered via GodMod3 research. OpenRouter provides free Llama, Mistral, DeepSeek models via one API. Could replace Claude for non-critical tasks (hashtags, captions) to reduce LLM costs. Revisit in Phase 6.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
