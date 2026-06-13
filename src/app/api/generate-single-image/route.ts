@@ -1,10 +1,12 @@
 /**
  * POST /api/generate-single-image
  * Generates a DALL-E image that matches the actual post content.
- * Uses hook + caption + brand context to build a specific, varied prompt.
+ * Uses hook + caption + brand context + niche intelligence to build smart, viral-focused prompts.
  * Cycles through visual styles so images are never all the same type.
  *
- * Body: { imagePrompt?, hook, caption, brandName, businessType, postIndex }
+ * Niche intelligence: Competitor context (hooks, patterns, what works) → differentiated visuals
+ *
+ * Body: { imagePrompt?, hook, caption, brandName, businessType, postIndex, nicheIntelligence?, platform? }
  * Returns: { imageUrl: string }
  */
 
@@ -22,6 +24,15 @@ const VISUAL_APPROACHES = [
   "editorial-style: a real moment captured, minimal staging, authentic environment, true to the brand world",
 ];
 
+// Platform-specific viral tactics to inject into prompts
+const PLATFORM_TACTICS: Record<string, string> = {
+  instagram: "bold colors, high contrast, eye-catching composition — thumb-stopping at 0.5s",
+  tiktok: "dynamic movement, emotional peak moment, hook-friendly framing — designed to stop scroll",
+  linkedin: "professional authenticity, real-world application, thought-leadership visual — credible and sharp",
+  facebook: "warm, relatable, community-focused feeling — conversational visual tone",
+  youtube: "cinematic quality, compelling thumbnail-friendly composition, clear focal point — click-worthy",
+};
+
 function buildPrompt(body: {
   imagePrompt?: string;
   hook: string;
@@ -29,20 +40,37 @@ function buildPrompt(body: {
   brandName: string;
   businessType: string;
   postIndex: number;
+  nicheIntelligence?: string;
+  platform?: string;
 }): string {
-  const { imagePrompt, hook, caption, brandName, businessType, postIndex } = body;
+  const { imagePrompt, hook, caption, brandName, businessType, postIndex, nicheIntelligence, platform } = body;
   const approach = VISUAL_APPROACHES[postIndex % VISUAL_APPROACHES.length];
+  const platformName = platform?.toLowerCase() ?? "instagram";
+  const platformTactic = PLATFORM_TACTICS[platformName] || PLATFORM_TACTICS.instagram;
 
   // Use the pre-written image prompt as the content core if available
   const contentCore = imagePrompt
     ? imagePrompt
     : `${hook}. ${caption.substring(0, 120)}`;
 
+  // If niche intelligence exists, use it to differentiate and make more viral
+  const nichemode = nicheIntelligence
+    ? `
+
+NICHE INTELLIGENCE (make this visually DIFFERENT from what competitors are doing):
+${nicheIntelligence}
+
+Your visual strategy: Stand out in the ${businessType} space by using unexpected compositions, unique lighting, or authentic moments competitors are missing. Make it so engaging users can't scroll past.`
+    : "";
+
   return `Social media background image for ${brandName}, a ${businessType} brand.
+
+Platform: ${platformName} — ${platformTactic}.
 
 Visual approach: ${approach}.
 
 What this post is about: ${contentCore}
+${nichemode}
 
 Strict rules — NO EXCEPTIONS:
 - NO text, words, letters, numbers, signs, labels, captions, watermarks, or typography of any kind anywhere in the image
@@ -53,7 +81,8 @@ Strict rules — NO EXCEPTIONS:
 - Do NOT use stock photo clichés: no fake smiles, no business handshakes, no pointing at whiteboards
 - High quality, cinematic, social-media-ready photograph or illustration
 - Square 1:1 composition
-- Pure visual only — text will be added separately`.trim();
+- Pure visual only — text will be added separately
+- VIRAL PRIORITY: The visual must be scroll-stopping, emotionally resonant, and impossible to ignore`.trim();
 }
 
 async function generateDalle(prompt: string, apiKey: string): Promise<string | null> {
@@ -103,6 +132,8 @@ export async function POST(request: NextRequest) {
     brandName: string;
     businessType: string;
     postIndex: number;
+    nicheIntelligence?: string;
+    platform?: string;
   };
 
   try {

@@ -494,22 +494,28 @@
   <div class="phase" style="margin-top:16px;">
     <div class="phase-label next">🟡 Phase 5 — Next Builds</div>
     <div class="section">
-      <div class="section-title">Video & Extended Features</div>
+      <div class="section-title">Video Generation — Finalized June 2026</div>
       <div class="grid-3">
 
         <div class="grid-item new">
-          <div class="grid-item-title">🎬 Reels Generator</div>
-          <div class="grid-item-desc">Open Generative AI + Kling 3.0. Post image → 9:16 video. "Generate Reel" button on every post card. Stays on platform.</div>
+          <div class="grid-item-title">🎬 Video Engine — LTX Studio Standard</div>
+          <div class="grid-item-desc"><strong style="color:#a78bfa">CHOSEN for Phase 5 launch.</strong> $35/month subscription. 28,800 computing seconds. Commercial rights included. Simple API call from Next.js — no infrastructure setup. LTX-2.3-fast model. 5-sec 9:16 portrait videos, native audio. ~$0.03/video at our volumes.</div>
         </div>
 
         <div class="grid-item new">
-          <div class="grid-item-title">🖼️ VideoStudio Component</div>
-          <div class="grid-item-desc">Drop Open Generative AI's Next.js VideoStudio into dashboard. 60+ image-to-video models.</div>
+          <div class="grid-item-title">🎬 Video Tiers (Finalized)</div>
+          <div class="grid-item-desc">
+            Starter: <strong>4 videos/month</strong><br/>
+            Growth: <strong>10 videos/month</strong><br/>
+            Pro: <strong>20 videos/month</strong><br/>
+            Agency: <strong>60 videos/month</strong><br/>
+            <br/>Cost at $0.03/video: Starter $0.12 · Agency $1.80/user/month. Video cost = &lt;1% of revenue at all tiers.
+          </div>
         </div>
 
         <div class="grid-item new">
-          <div class="grid-item-title">🛡️ Nvidia NIM Backup</div>
-          <div class="grid-item-desc">Enterprise-safe image API as fallback. Free dev tier. Swap in if Together.ai has downtime.</div>
+          <div class="grid-item-title">🔒 Video Testing Toggle</div>
+          <div class="grid-item-desc"><strong style="color:#f59e0b">LIVE — gated OFF.</strong> ENABLE_VIDEO_GENERATION=false in Vercel env. /api/generate-video endpoint deployed but returns {skipped:true} during testing. Zero credits burned. Flip to true + add LTX_API_KEY to activate. Platform-aware prompts: Instagram, TikTok, LinkedIn, Facebook, YouTube.</div>
         </div>
 
       </div>
@@ -528,13 +534,13 @@
       <div class="grid-3">
 
         <div class="grid-item later">
-          <div class="grid-item-title">🚀 LTX-2.3 Self-Hosted</div>
-          <div class="grid-item-desc">Replace Open Generative AI dependency. 4K, 50fps, native 9:16, audio sync. Free under $10M revenue. Full data ownership.</div>
+          <div class="grid-item-title">🚀 Wan2GP Migration (deepbeepmeep)</div>
+          <div class="grid-item-desc"><strong style="color:#60a5fa">CHOSEN for Phase 6 scale.</strong> Wan2GP by Wassim Younes (deepbeepmeep). Runs Wan 2.6 + LTX-2 locally. Self-hosted on RunPod GPU (~$0.34/hr). Cost: $0.006/video. At 100 users: $7.20/month total video cost. Fully private — data never leaves server. Apache 2.0 free. Replaces LTX Standard API when volume justifies it.</div>
         </div>
 
         <div class="grid-item later">
-          <div class="grid-item-title">🎞️ OpenMontage</div>
-          <div class="grid-item-desc">Full video production pipeline. Script → Voice → Music → Subtitles → Render. Premium "Brand Video" feature.</div>
+          <div class="grid-item-title">🎞️ SkyReels V4 (Future Option)</div>
+          <div class="grid-item-desc">Evaluated June 2026. Best for human-centric video — 33 facial expressions, 400+ natural movements, Hollywood-trained. Joint audio-video generation. Apache 2.0. Consider adding as premium option for brands that feature real people (coaches, fitness, personal brand). $0.30/video via piapi.ai.</div>
         </div>
 
         <div class="grid-item later">
@@ -575,8 +581,8 @@
         <div class="grid-item done"><div class="grid-item-title">Make.com</div><div class="grid-item-desc">7 HTTP webhook modules — triggers post + image generation pipeline</div></div>
         <div class="grid-item done"><div class="grid-item-title">Claude (Anthropic)</div><div class="grid-item-desc">Content generation, positioning statements, competitor analysis, virality gate</div></div>
         <div class="grid-item done"><div class="grid-item-title">Together.ai + Flux.1-schnell</div><div class="grid-item-desc">✅ LIVE — replaced DALL-E. $0.003/image. Account connected to Vercel. Startup accelerator application pending ($50K credits).</div></div>
-        <div class="grid-item new"><div class="grid-item-title">Open Generative AI (Next)</div><div class="grid-item-desc">Kling 3.0 image-to-video. 60+ models. Next.js VideoStudio component. Phase 5.</div></div>
-        <div class="grid-item later"><div class="grid-item-title">LTX-2.3 (Later)</div><div class="grid-item-desc">Self-hosted video engine. 4K, 9:16 portrait, audio sync. Free under $10M. Phase 6.</div></div>
+        <div class="grid-item new"><div class="grid-item-title">LTX Studio Standard — Video (Phase 5)</div><div class="grid-item-desc">$35/month. LTX-2.3-fast. 9:16 portrait. Native audio. Toggle gated OFF during testing. Activate: ENABLE_VIDEO_GENERATION=true + LTX_API_KEY in Vercel.</div></div>
+        <div class="grid-item later"><div class="grid-item-title">Wan2GP by deepbeepmeep (Phase 6)</div><div class="grid-item-desc">Self-hosted on RunPod. Wan 2.6 + LTX-2. $0.006/video. ~$7.20/month at 100 users. Fully private. Apache 2.0.</div></div>
       </div>
     </div>
   </div>
@@ -596,18 +602,18 @@
         </div>
 
         <div class="grid-item done">
-          <div class="grid-item-title">✅ Open Generative AI (Anil-matcha)</div>
-          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 5 video feature.</strong> MIT licensed, free. 200+ models, 60+ image-to-video (Kling 3.0, Wan 2.2, Seedance). Native Next.js VideoStudio component. Self-host or use muapi.ai. Replaces need for Higgsfield commercial subscription.</div>
+          <div class="grid-item-title">✅ LTX Studio Standard — Phase 5 Video</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 5 launch video engine.</strong> $35/month subscription. Commercial rights included. LTX-2.3-fast model. 5-sec 9:16 portrait, native audio. ~$0.03/video. Simple API — no infrastructure. Toggle gated OFF during testing (ENABLE_VIDEO_GENERATION=false). Endpoint: /api/generate-video live on Vercel.</div>
         </div>
 
         <div class="grid-item done">
-          <div class="grid-item-title">✅ LTX-2.3 (Lightricks)</div>
-          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 6 self-hosted engine.</strong> Apache 2.0, free under $10M revenue. 22B params, 4K at 50fps, native 9:16 portrait, synchronized audio. Replaces Open Generative AI dependency at scale. ComfyUI + Hugging Face supported.</div>
+          <div class="grid-item-title">✅ Wan2GP by deepbeepmeep — Phase 6</div>
+          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 6 scale migration.</strong> By Wassim Younes (@deepbeepmeep). Runs Wan 2.6 + LTX-2 locally. Self-hosted on RunPod GPU ($0.34/hr). $0.006/video — effectively free. At 100 users: $7.20/month total. Fully private (data never leaves server). Apache 2.0. 6GB VRAM minimum. Mac M4 support (experimental).</div>
         </div>
 
-        <div class="grid-item done">
-          <div class="grid-item-title">✅ OpenMontage</div>
-          <div class="grid-item-desc"><strong style="color:#4ade80">CHOSEN — Phase 6 premium feature.</strong> Open source. 12 pipelines, 52 tools, 500+ agent skills. Full video production: script → voice → music → subtitles → render. Works with Claude Code. For "Brand Video" premium tier.</div>
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ OpenMontage</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — redundant.</strong> LTX Studio already covers the full production pipeline: script → storyboard → keyframe animation → sound → timeline → ad/trailer/music video output. OpenMontage adds nothing we don't already have at $35/month.</div>
         </div>
 
         <div class="grid-item done">
@@ -627,7 +633,22 @@
 
         <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
           <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Higgsfield.ai (commercial)</div>
-          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — replaced by Open Generative AI.</strong> Paid commercial platform. Open Generative AI gives same capabilities (Kling 3.0, Veo, Wan 2.2) for free via MIT license with native Next.js components.</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED — paid platform, misleading "free" claims.</strong> Starts at $9/month, barely 2-3 quality videos. No free tier. The "free Higgsfield" creators talk about is Open Generative AI (Anil-matcha's repo) — a separate open-source alternative. Higgsfield CLI connects to their paid API, not a free model. Replaced by LTX Studio Standard + Wan2GP.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ Open Generative AI via muapi.ai</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">DROPPED for production — privacy concern.</strong> Platform (Anil-matcha repo) is MIT licensed and free. BUT premium models (Kling, Veo, Sora) route through muapi.ai servers — brand data leaves our control. Not acceptable for a SaaS serving business brands. Good for personal use only. Use Wan2GP self-hosted instead for full privacy.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">
+          <div class="grid-item-title" style="color:rgba(239,68,68,0.7);">❌ OpenArt ($14.50/month)</div>
+          <div class="grid-item-desc"><strong style="color:rgba(239,68,68,0.6)">EVALUATED — dropped for privacy.</strong> Multi-model platform (Kling, Veo, Wan, LTX, 100+ models). $14.50/month annual = 150 videos = $0.097/video. Great value BUT brand data goes through OpenArt's servers. Not acceptable for commercial SaaS. LTX Studio Standard wins on both cost and data control.</div>
+        </div>
+
+        <div class="grid-item" style="border-color:rgba(156,163,175,0.15);background:rgba(156,163,175,0.03);">
+          <div class="grid-item-title" style="color:#9ca3af;">⏸️ SkyReels V4</div>
+          <div class="grid-item-desc"><strong style="color:#9ca3af">EVALUATED — deferred as future option.</strong> Best for human-centric video (coaches, fitness, personal brands). 33 facial expressions, 400+ natural movements. Hollywood-trained. Joint audio+video. Apache 2.0. $0.30/video via piapi.ai or self-hosted free. Consider adding as premium option in Phase 7 for brands featuring real people.</div>
         </div>
 
         <div class="grid-item" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.03);">

@@ -15,6 +15,7 @@ interface Props {
     image_prompt: string | null;
     is_bonus: boolean;
     post_number?: number;
+    platform?: string;
   };
   brand: {
     id: string;
@@ -25,8 +26,9 @@ interface Props {
     business_type: string;
     logo_url: string | null;
   };
-  cardIndex?: number;       // position in the grid — used to stagger image calls
-  forceImage?: boolean;     // bypass ratio check — always generate AI image (used on regenerate)
+  nicheIntelligence?: string;  // Competitive insights to guide viral image generation
+  cardIndex?: number;          // position in the grid — used to stagger image calls
+  forceImage?: boolean;        // bypass ratio check — always generate AI image (used on regenerate)
   onImageReady?: (url: string) => void;
 }
 
@@ -69,6 +71,8 @@ async function fetchDalleImage(ctx: {
   brandName: string;
   businessType: string;
   postIndex: number;
+  nicheIntelligence?: string;
+  platform?: string;
 }): Promise<string | null> {
   try {
     const res = await fetch("/api/generate-single-image", {
@@ -81,6 +85,8 @@ async function fetchDalleImage(ctx: {
         brandName: ctx.brandName,
         businessType: ctx.businessType,
         postIndex: ctx.postIndex,
+        nicheIntelligence: ctx.nicheIntelligence,
+        platform: ctx.platform,
       }),
     });
     if (!res.ok) return null;
@@ -91,7 +97,7 @@ async function fetchDalleImage(ctx: {
   }
 }
 
-export default function PostImageRenderer({ post, brand, cardIndex = 0, forceImage = false, onImageReady }: Props) {
+export default function PostImageRenderer({ post, brand, nicheIntelligence, cardIndex = 0, forceImage = false, onImageReady }: Props) {
   const [imageUrl, setImageUrl] = useState<string | null>(post.image_url);
   const [rendering, setRendering] = useState(false);
   const [renderStatus, setRenderStatus] = useState<string>("Rendering design...");
@@ -154,6 +160,8 @@ export default function PostImageRenderer({ post, brand, cardIndex = 0, forceIma
           brandName: brand.brand_name,
           businessType: brand.business_type,
           postIndex: postGroup,
+          nicheIntelligence: nicheIntelligence,
+          platform: post.platform,
         });
       }
 

@@ -33,6 +33,7 @@ interface Brand {
   visual_style?: string;
   business_type?: string;
   logo_url?: string | null;
+  platformNicheIntelligence?: Record<string, string>;
   [key: string]: unknown;
 }
 
@@ -106,6 +107,8 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
   const isCopied = copiedId === (active.id ?? "");
   const isPublished = publishedId === (active.id ?? "");
   const regensLeft = globalRegenCount ?? 0;
+  // Extract niche intelligence for this post's platform
+  const platformNiche = brand?.platformNicheIntelligence?.[displayPlatform] ?? undefined;
 
   const publishPost = (post: Post) => {
     const text = `${post.hook}\n\n${post.caption}\n\n${post.cta}\n\n${typeof post.hashtags === "string" ? post.hashtags : post.hashtags?.join(" ")}`;
@@ -159,6 +162,7 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
               image_prompt: active.image_prompt ?? null,
               is_bonus: active.is_bonus ?? false,
               post_number: active.post_number,
+              platform: active.platform,
             }}
             brand={{
               id: brand.id ?? "",
@@ -169,6 +173,7 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
               business_type: brand.business_type as string ?? "",
               logo_url: brand.logo_url as string ?? null,
             }}
+            nicheIntelligence={platformNiche}
             cardIndex={cardIndex}
             onImageReady={(url) => {
               setLocalImageUrl(url);
