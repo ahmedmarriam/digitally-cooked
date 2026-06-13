@@ -1,8 +1,9 @@
 /**
  * POST /api/generate-images
  * Uses the AI template engine to generate branded posts.
- * 60% image posts (DALL-E background + overlay), 40% solid templates.
+ * 60% image posts (Flux.1-schnell via Together.ai), 40% solid templates.
  * Bonus posts: 70% image, 30% solid.
+ * Cost: $0.003/image — 13x cheaper than DALL-E.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -17,38 +18,58 @@ import {
 
 export const maxDuration = 300;
 
-const DALLE_API_URL = "https://api.openai.com/v1/images/generations";
+const FLUX_API_URL = "https://api.together.xyz/v1/images/generations";
 const STORAGE_BUCKET = "post-images";
 
 let lastError = "";
 
-// ── DALL-E image generation ────────────────────────────────────
-async function generateDalleImage(
+// ── Flux.1-schnell image generation (via Together.ai) ─────────
+async function generateFluxImage(
   prompt: string,
-  size: "1024x1024",
-  apiKey: string
+  apiKey: string,
+  retries = 3
 ): Promise<string | null> {
-  try {
-    const res = await fetch(DALLE_API_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "gpt-image-1", prompt, n: 1, size: "1024x1024", quality: "low" }),
-    });
-    if (!res.ok) {
-      lastError = `DALL-E ${res.status}: ${await res.text()}`;
-      console.error(lastError);
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(FLUX_API_URL, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "black-forest-labs/FLUX.1-schnell",
+          prompt,
+          width: 1024,
+          height: 1024,
+          steps: 4,
+          n: 1,
+        }),
+      });
+
+      // Rate limited — wait and retry with exponential backoff
+      if (res.status === 429) {
+        const wait = attempt * 2000; // 2s, 4s, 6s
+        console.warn(`Flux rate limited. Retrying in ${wait}ms (attempt ${attempt}/${retries})`);
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+
+      if (!res.ok) {
+        lastError = `Flux ${res.status}: ${await res.text()}`;
+        console.error(lastError);
+        return null;
+      }
+
+      const data = await res.json();
+      const item = data?.data?.[0];
+      if (item?.url) return item.url;
+      if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
+      return null;
+    } catch (err) {
+      lastError = String(err);
       return null;
     }
-    const data = await res.json();
-    // gpt-image-1 returns base64, older models return url
-    const item = data?.data?.[0];
-    if (item?.url) return item.url;
-    if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
-    return null;
-  } catch (err) {
-    lastError = String(err);
-    return null;
   }
+  lastError = "Flux rate limit exceeded after retries.";
+  return null;
 }
 
 // ── Download URL or base64 → Buffer ───────────────────────────
@@ -86,9 +107,9 @@ async function uploadImage(buffer: Buffer, fileName: string): Promise<string | n
 
 // ── Main handler ───────────────────────────────────────────────
 export async function POST(request: NextRequest) {
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (!openaiKey) {
-    return NextResponse.json({ error: "OpenAI API key not configured." }, { status: 500 });
+  const togetherKey = process.env.TOGETHER_API_KEY;
+  if (!togetherKey) {
+    return NextResponse.json({ error: "Together.ai API key not configured." }, { status: 500 });
   }
 
   let brand_id: string | null = null;
@@ -157,13 +178,16 @@ export async function POST(request: NextRequest) {
       return true;
     });
 
-    // Process up to 8 concepts per call — enough for one full batch
-    const uniqueConcepts = allConcepts.slice(0, 8);
+    // Process up to 3 concepts per call — stays within Together.ai rate limits
+    const uniqueConcepts = allConcepts.slice(0, 3);
 
     let generated = 0;
     let failed = 0;
 
-    for (const post of uniqueConcepts) {
+    for (let ci = 0; ci < uniqueConcepts.length; ci++) {
+      // Small delay between requests to avoid Together.ai rate limits
+      if (ci > 0) await new Promise((r) => setTimeout(r, 1500));
+      const post = uniqueConcepts[ci];
       const isBonus = post.is_bonus ?? false;
       const postGroup = post.post_group ?? 1;
       // Use post_group as the ratio index — globally unique per concept
@@ -185,7 +209,7 @@ export async function POST(request: NextRequest) {
       let imageBuffer: Buffer | null = null;
 
       if (useImage) {
-        const imageUrl = await generateDalleImage(post.image_prompt ?? "", "1024x1024", openaiKey);
+        const imageUrl = await generateFluxImage(post.image_prompt ?? "", togetherKey);
         if (imageUrl) imageBuffer = await fetchBuffer(imageUrl);
       }
 
