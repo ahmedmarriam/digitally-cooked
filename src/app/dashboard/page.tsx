@@ -107,8 +107,14 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
   const isCopied = copiedId === (active.id ?? "");
   const isPublished = publishedId === (active.id ?? "");
   const regensLeft = globalRegenCount ?? 0;
-  // Extract niche intelligence for this post's platform
-  const platformNiche = brand?.platformNicheIntelligence?.[displayPlatform] ?? undefined;
+  // Extract niche intelligence for this post's platform (keys are normalized to lowercase)
+  const platformNicheObj = brand?.platformNicheIntelligence as Record<string, Record<string, string>> | undefined;
+  const platformKey = active.platform?.toLowerCase() ?? displayPlatform.toLowerCase();
+  const platformNicheData = platformNicheObj?.[platformKey];
+  // Flatten the intelligence object into a readable string for the image prompt
+  const platformNiche = platformNicheData
+    ? `Hook patterns: ${platformNicheData.hookPatterns ?? ""}. What works: ${platformNicheData.whatMakesItWork ?? ""}. How to beat them: ${platformNicheData.howToDoItBetter ?? ""}. Formats: ${platformNicheData.contentFormats ?? ""}. Emotional triggers: ${platformNicheData.emotionalTriggers ?? ""}.`
+    : undefined;
 
   const publishPost = (post: Post) => {
     const text = `${post.hook}\n\n${post.caption}\n\n${post.cta}\n\n${typeof post.hashtags === "string" ? post.hashtags : post.hashtags?.join(" ")}`;

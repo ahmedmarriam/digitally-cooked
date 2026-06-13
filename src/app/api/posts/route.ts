@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   let brandQuery = supabase
     .from("brands")
-    .select("id, brand_name, generation_status, platforms, brand_colors, logo_url, content_tone, visual_style, business_type")
+    .select("id, brand_name, generation_status, platforms, brand_colors, logo_url, content_tone, visual_style, business_type, niche_intelligence")
     .eq("user_id", session.userId);
 
   if (brandId) {
@@ -62,5 +62,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch posts." }, { status: 500 });
   }
 
-  return NextResponse.json({ posts: posts ?? [], brand });
+  // Parse niche_intelligence and expose it as platformNicheIntelligence (keyed by lowercase platform)
+  let platformNicheIntelligence: Record<string, Record<string, string>> = {};
+  if (brand.niche_intelligence) {
+    try {
+      const raw = typeof brand.niche_intelligence === "string"
+        ? JSON.parse(brand.niche_intelligence)
+        : brand.niche_intelligence;
+      // Normalize all keys to lowercase for reliable lookup
+      for (const key of Object.keys(raw)) {
+        platformNicheIntelligence[key.toLowerCase()] = raw[key];
+      }
+    } catch { /* malformed niche intelligence — skip */ }
+  }
+
+  const brandWithNiche = { ...brand, platformNicheIntelligence };
+
+  return NextResponse.json({ posts: posts ?? [], brand: brandWithNiche });
 }
