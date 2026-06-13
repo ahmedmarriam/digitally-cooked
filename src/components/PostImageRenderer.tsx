@@ -25,7 +25,8 @@ interface Props {
     business_type: string;
     logo_url: string | null;
   };
-  cardIndex?: number;       // position in the grid — used to stagger DALL-E calls
+  cardIndex?: number;       // position in the grid — used to stagger image calls
+  forceImage?: boolean;     // bypass ratio check — always generate AI image (used on regenerate)
   onImageReady?: (url: string) => void;
 }
 
@@ -90,7 +91,7 @@ async function fetchDalleImage(ctx: {
   }
 }
 
-export default function PostImageRenderer({ post, brand, cardIndex = 0, onImageReady }: Props) {
+export default function PostImageRenderer({ post, brand, cardIndex = 0, forceImage = false, onImageReady }: Props) {
   const [imageUrl, setImageUrl] = useState<string | null>(post.image_url);
   const [rendering, setRendering] = useState(false);
   const [renderStatus, setRenderStatus] = useState<string>("Rendering design...");
@@ -136,7 +137,8 @@ export default function PostImageRenderer({ post, brand, cardIndex = 0, onImageR
 
       // Stagger DALL-E calls so all posts don't fire simultaneously
       // Each card waits its turn: card 0 = instant, card 1 = 1.5s, card 2 = 3s etc.
-      const useDalle = shouldUseDalle(postGroup, post.is_bonus ?? false);
+      // forceImage=true on manual regenerate — always try AI image regardless of ratio
+      const useDalle = forceImage || shouldUseDalle(postGroup, post.is_bonus ?? false);
       if (useDalle && cardIndex > 0) {
         setRenderStatus("Queued...");
         await new Promise((r) => setTimeout(r, cardIndex * 1500));

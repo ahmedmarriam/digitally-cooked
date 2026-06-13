@@ -94,6 +94,7 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
   const [localRenderKey, setLocalRenderKey] = useState(0);
   const [regening, setRegening] = useState(false);
   const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
+  const [forceNextImage, setForceNextImage] = useState(false);
 
   const active = posts[activeTab] ?? posts[0];
   if (!active) return null;
@@ -126,7 +127,8 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
         body: JSON.stringify({ brandId: brand.id, postGroup: active.post_group }),
       });
       onRegenUsed?.();
-      setLocalImageUrl(null); // clear image so PostImageRenderer re-fires
+      setForceNextImage(true);  // always generate AI image on manual regenerate
+      setLocalImageUrl(null);   // clear image so PostImageRenderer re-fires
       setLocalRenderKey((k) => k + 1);
     } catch {
       // silent fail
@@ -145,6 +147,7 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
         <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", overflow: "hidden", background: "#13121f" }}>
           <PostImageRenderer
             key={`${active.id ?? active.post_group}-${localRenderKey}`}
+            forceImage={forceNextImage}
             post={{
               id: active.id ?? String(active.post_group),
               post_group: active.post_group ?? 0,
