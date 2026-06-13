@@ -26,35 +26,50 @@ let lastError = "";
 // ── Flux.1-schnell image generation (via Together.ai) ─────────
 async function generateFluxImage(
   prompt: string,
-  apiKey: string
+  apiKey: string,
+  retries = 3
 ): Promise<string | null> {
-  try {
-    const res = await fetch(FLUX_API_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "black-forest-labs/FLUX.1-schnell",
-        prompt,
-        width: 1024,
-        height: 1024,
-        steps: 4,
-        n: 1,
-      }),
-    });
-    if (!res.ok) {
-      lastError = `Flux ${res.status}: ${await res.text()}`;
-      console.error(lastError);
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(FLUX_API_URL, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "black-forest-labs/FLUX.1-schnell",
+          prompt,
+          width: 1024,
+          height: 1024,
+          steps: 4,
+          n: 1,
+        }),
+      });
+
+      // Rate limited — wait and retry with exponential backoff
+      if (res.status === 429) {
+        const wait = attempt * 2000; // 2s, 4s, 6s
+        console.warn(`Flux rate limited. Retrying in ${wait}ms (attempt ${attempt}/${retries})`);
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+
+      if (!res.ok) {
+        lastError = `Flux ${res.status}: ${await res.text()}`;
+        console.error(lastError);
+        return null;
+      }
+
+      const data = await res.json();
+      const item = data?.data?.[0];
+      if (item?.url) return item.url;
+      if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
+      return null;
+    } catch (err) {
+      lastError = String(err);
       return null;
     }
-    const data = await res.json();
-    const item = data?.data?.[0];
-    if (item?.url) return item.url;
-    if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
-    return null;
-  } catch (err) {
-    lastError = String(err);
-    return null;
   }
+  lastError = "Flux rate limit exceeded after retries.";
+  return null;
 }
 
 // ── Download URL or base64 → Buffer ───────────────────────────
@@ -169,7 +184,10 @@ export async function POST(request: NextRequest) {
     let generated = 0;
     let failed = 0;
 
-    for (const post of uniqueConcepts) {
+    for (let ci = 0; ci < uniqueConcepts.length; ci++) {
+      // Small delay between requests to avoid Together.ai rate limits
+      if (ci > 0) await new Promise((r) => setTimeout(r, 1500));
+      const post = uniqueConcepts[ci];
       const isBonus = post.is_bonus ?? false;
       const postGroup = post.post_group ?? 1;
       // Use post_group as the ratio index — globally unique per concept
