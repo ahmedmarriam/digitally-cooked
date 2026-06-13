@@ -123,6 +123,7 @@ export default function PostImageRenderer({ post, brand, nicheIntelligence, card
       textColor,
       logoBase64: brand.logo_url ?? null,
       businessType: brand.business_type ?? "",
+      rawColors: brand.brand_colors ?? "",
     };
 
     // Use post_group as the cycle index — globally consistent across all platforms
