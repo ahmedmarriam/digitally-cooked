@@ -70,6 +70,7 @@ async function fetchDalleImage(ctx: {
   caption: string;
   brandName: string;
   businessType: string;
+  visualStyle?: string;
   postIndex: number;
   nicheIntelligence?: string;
   platform?: string;
@@ -84,6 +85,7 @@ async function fetchDalleImage(ctx: {
         caption: ctx.caption,
         brandName: ctx.brandName,
         businessType: ctx.businessType,
+        visualStyle: ctx.visualStyle,
         postIndex: ctx.postIndex,
         nicheIntelligence: ctx.nicheIntelligence,
         platform: ctx.platform,
@@ -123,6 +125,7 @@ export default function PostImageRenderer({ post, brand, nicheIntelligence, card
       textColor,
       logoBase64: brand.logo_url ?? null,
       businessType: brand.business_type ?? "",
+      visualStyle: brand.visual_style ?? "",
       rawColors: brand.brand_colors ?? "",
     };
 
@@ -160,6 +163,7 @@ export default function PostImageRenderer({ post, brand, nicheIntelligence, card
           caption: post.caption,
           brandName: brand.brand_name,
           businessType: brand.business_type,
+          visualStyle: brand.visual_style,
           postIndex: postGroup,
           nicheIntelligence: nicheIntelligence,
           platform: post.platform,

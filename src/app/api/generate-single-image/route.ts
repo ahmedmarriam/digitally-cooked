@@ -33,20 +33,50 @@ const PLATFORM_TACTICS: Record<string, string> = {
   youtube: "cinematic quality, compelling thumbnail-friendly composition, clear focal point — click-worthy",
 };
 
+// Map visual_style + businessType to a consistent aesthetic fingerprint
+// This is what makes a brand's grid look cohesive — every image shares the same mood
+function getBrandAesthetic(visualStyle: string, businessType: string): string {
+  const vs = (visualStyle ?? "").toLowerCase();
+  const bt = (businessType ?? "").toLowerCase();
+
+  if (vs.includes("elegant") || vs.includes("luxury") || vs.includes("premium") || vs.includes("editorial") ||
+      bt.includes("coach") || bt.includes("consult") || bt.includes("therapy") || bt.includes("legal") || bt.includes("finance")) {
+    return "cinematic and editorial — rich shadows, selective soft lighting, intimate and thoughtful. Dark moody tones. Every frame feels intentional, like a magazine shoot. NO bright overexposed looks.";
+  }
+  if (vs.includes("bold") || vs.includes("vibrant") || vs.includes("energetic") || vs.includes("dynamic") ||
+      bt.includes("fitness") || bt.includes("sport") || bt.includes("gym") || bt.includes("startup") || bt.includes("agency")) {
+    return "high contrast and dramatic — bold directional lighting, deep shadows, strong graphic compositions. Powerful and unapologetic. NO soft pastel or low-contrast looks.";
+  }
+  if (vs.includes("minimal") || vs.includes("clean") || vs.includes("simple") || vs.includes("modern") ||
+      bt.includes("tech") || bt.includes("saas") || bt.includes("software") || bt.includes("design")) {
+    return "minimal and refined — clean compositions, soft natural light, lots of breathing room. Muted palette, precise framing. Feels expensive and considered. NO cluttered or chaotic frames.";
+  }
+  if (vs.includes("warm") || vs.includes("playful") || vs.includes("friendly") || vs.includes("fun") ||
+      bt.includes("food") || bt.includes("restaurant") || bt.includes("cafe") || bt.includes("wellness") || bt.includes("yoga")) {
+    return "warm and authentic — golden tones, soft bokeh, genuine candid moments. Feels real and lived-in. Approachable lighting, natural colour grading. NO cold corporate or overly staged looks.";
+  }
+  // Default: clean and cinematic works for any brand
+  return "clean and cinematic — purposeful compositions, controlled lighting, strong visual hierarchy. Professional without being sterile. Feels designed, not accidental.";
+}
+
 function buildPrompt(body: {
   imagePrompt?: string;
   hook: string;
   caption: string;
   brandName: string;
   businessType: string;
+  visualStyle?: string;
   postIndex: number;
   nicheIntelligence?: string;
   platform?: string;
 }): string {
-  const { imagePrompt, hook, caption, brandName, businessType, postIndex, nicheIntelligence, platform } = body;
+  const { imagePrompt, hook, caption, brandName, businessType, visualStyle, postIndex, nicheIntelligence, platform } = body;
   const approach = VISUAL_APPROACHES[postIndex % VISUAL_APPROACHES.length];
   const platformName = platform?.toLowerCase() ?? "instagram";
   const platformTactic = PLATFORM_TACTICS[platformName] || PLATFORM_TACTICS.instagram;
+
+  // Brand aesthetic fingerprint — applied to EVERY image so the grid looks cohesive
+  const brandAesthetic = getBrandAesthetic(visualStyle ?? "", businessType);
 
   // Use the pre-written image prompt as the content core if available
   const contentCore = imagePrompt
@@ -54,35 +84,38 @@ function buildPrompt(body: {
     : `${hook}. ${caption.substring(0, 120)}`;
 
   // If niche intelligence exists, use it to differentiate and make more viral
-  const nichemode = nicheIntelligence
+  const nicheMode = nicheIntelligence
     ? `
 
 NICHE INTELLIGENCE (make this visually DIFFERENT from what competitors are doing):
 ${nicheIntelligence}
 
-Your visual strategy: Stand out in the ${businessType} space by using unexpected compositions, unique lighting, or authentic moments competitors are missing. Make it so engaging users can't scroll past.`
+Your visual strategy: Stand out in the ${businessType} space by using unexpected compositions, unique lighting, or authentic moments competitors are missing.`
     : "";
 
   return `Social media background image for ${brandName}, a ${businessType} brand.
 
+BRAND VISUAL DIRECTION — apply this aesthetic consistently to every image so the feed looks like one curated body of work:
+${brandAesthetic}
+
 Platform: ${platformName} — ${platformTactic}.
 
-Visual approach: ${approach}.
+Composition approach for this specific post: ${approach}.
 
 What this post is about: ${contentCore}
-${nichemode}
+${nicheMode}
 
 Strict rules — NO EXCEPTIONS:
-- NO text, words, letters, numbers, signs, labels, captions, watermarks, or typography of any kind anywhere in the image
+- NO text, words, letters, numbers, signs, labels, captions, watermarks, or typography of any kind
 - NO overlaid graphics, logos, or UI elements
 - The image must be directly and obviously relevant to the post topic
-- Do NOT show random faces staring at camera — if showing a person, show them naturally in context doing something
+- Do NOT show random faces staring at camera — if showing a person, show them naturally in context
 - Do NOT include any religious markers (bindi, tilak, cross, hijab, etc.) — keep it culturally neutral
 - Do NOT use stock photo clichés: no fake smiles, no business handshakes, no pointing at whiteboards
 - High quality, cinematic, social-media-ready photograph or illustration
 - Square 1:1 composition
 - Pure visual only — text will be added separately
-- VIRAL PRIORITY: The visual must be scroll-stopping, emotionally resonant, and impossible to ignore`.trim();
+- GRID COHESION: This image must feel like it belongs in the same curated Instagram feed as all other images for this brand`.trim();
 }
 
 async function generateDalle(prompt: string, apiKey: string): Promise<string | null> {
@@ -131,6 +164,7 @@ export async function POST(request: NextRequest) {
     caption: string;
     brandName: string;
     businessType: string;
+    visualStyle?: string;
     postIndex: number;
     nicheIntelligence?: string;
     platform?: string;

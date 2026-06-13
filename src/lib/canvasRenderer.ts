@@ -10,8 +10,90 @@ export interface BrandData {
   secondaryColor: string;
   textColor: string;
   businessType?: string;
+  visualStyle?: string;
   logoBase64?: string | null;
   rawColors?: string;
+}
+
+/**
+ * Brand Design Direction — the core of grid cohesion.
+ * Maps a brand's visual_style + businessType to:
+ *   - 2 cohesive templates (so the grid uses only these two, alternating)
+ *   - An image aesthetic fingerprint applied to EVERY image prompt
+ *
+ * A professional designer picks ONE direction per brand and applies it everywhere.
+ * We do the same — limiting to 2 templates ensures the grid reads as curated, not random.
+ */
+export function getBrandDesignDirection(brand: BrandData): {
+  templates: TemplateStyle[];
+  imageAesthetic: string;
+  direction: string;
+} {
+  const vs = (brand.visualStyle ?? "").toLowerCase();
+  const bt = (brand.businessType ?? "").toLowerCase();
+
+  // Editorial direction — clean, magazine, typographic. Two calm templates.
+  if (
+    vs.includes("elegant") || vs.includes("luxury") || vs.includes("premium") ||
+    vs.includes("editorial") || vs.includes("sophisticated") ||
+    bt.includes("coach") || bt.includes("consult") || bt.includes("therapy") ||
+    bt.includes("legal") || bt.includes("finance") || bt.includes("education")
+  ) {
+    return {
+      direction: "editorial",
+      templates: ["editorial", "gradient"],
+      imageAesthetic: "cinematic and editorial — rich shadows, selective soft lighting, intimate and thoughtful. Dark moody tones. Every frame feels intentional, like a magazine shoot. NO bright overexposed looks.",
+    };
+  }
+
+  // Bold direction — high energy, contrast-driven. Dynamic pair.
+  if (
+    vs.includes("bold") || vs.includes("vibrant") || vs.includes("energetic") ||
+    vs.includes("dynamic") || vs.includes("striking") ||
+    bt.includes("fitness") || bt.includes("sport") || bt.includes("gym") ||
+    bt.includes("startup") || bt.includes("agency") || bt.includes("creative")
+  ) {
+    return {
+      direction: "bold",
+      templates: ["bold", "split"],
+      imageAesthetic: "high contrast and dramatic — bold directional lighting, deep shadows, strong graphic compositions. Powerful and unapologetic. NO soft pastel or low-contrast looks.",
+    };
+  }
+
+  // Minimal direction — clean, airy, refined. Two quiet templates.
+  if (
+    vs.includes("minimal") || vs.includes("clean") || vs.includes("simple") ||
+    vs.includes("modern") || vs.includes("sleek") ||
+    bt.includes("tech") || bt.includes("saas") || bt.includes("software") ||
+    bt.includes("design") || bt.includes("architect")
+  ) {
+    return {
+      direction: "minimal",
+      templates: ["gradient", "editorial"],
+      imageAesthetic: "minimal and refined — clean compositions, soft natural light, lots of breathing room. Muted palette, precise framing. Feels expensive and considered. NO cluttered or chaotic frames.",
+    };
+  }
+
+  // Warm direction — community, authentic, approachable.
+  if (
+    vs.includes("warm") || vs.includes("playful") || vs.includes("friendly") ||
+    vs.includes("fun") || vs.includes("casual") ||
+    bt.includes("food") || bt.includes("restaurant") || bt.includes("cafe") ||
+    bt.includes("wellness") || bt.includes("yoga") || bt.includes("community")
+  ) {
+    return {
+      direction: "warm",
+      templates: ["bold", "gradient"],
+      imageAesthetic: "warm and authentic — golden tones, soft bokeh, genuine candid moments. Feels real and lived-in. Approachable lighting, natural colour grading. NO cold corporate or overly staged looks.",
+    };
+  }
+
+  // Default: editorial + bold — works for most brands, clean with presence
+  return {
+    direction: "editorial",
+    templates: ["editorial", "bold"],
+    imageAesthetic: "clean and cinematic — purposeful compositions, controlled lighting, strong visual hierarchy. Professional without being sterile. Feels designed, not accidental.",
+  };
 }
 
 export interface PostData {
@@ -55,7 +137,14 @@ function truncate(text: string, max: number): string {
   return (text ?? "").length > max ? text.substring(0, max - 1) + "…" : (text ?? "");
 }
 
-function selectTemplate(postIndex: number): TemplateStyle {
+function selectTemplate(postIndex: number, brand?: BrandData): TemplateStyle {
+  // If we have brand data, use only the 2 cohesive templates for this brand's direction.
+  // This is the key to grid cohesion — the feed doesn't cycle through 4 unrelated templates.
+  if (brand) {
+    const { templates } = getBrandDesignDirection(brand);
+    return templates[(postIndex ?? 0) % templates.length];
+  }
+  // Fallback when brand data unavailable
   const cycle: TemplateStyle[] = ["bold", "gradient", "split", "editorial"];
   return cycle[(postIndex ?? 0) % cycle.length];
 }
@@ -124,8 +213,8 @@ export async function renderPost(
   canvas.height = size;
   const ctx = canvas.getContext("2d")!;
 
-  // Use explicit template if provided in editor, otherwise auto-select
-  const template = post.template ?? selectTemplate(post.postIndex ?? 0);
+  // Use explicit template if provided in editor, otherwise auto-select using brand direction
+  const template = post.template ?? selectTemplate(post.postIndex ?? 0, brand);
   const hasImage = !!post.imageUrl;
 
   if (hasImage && post.imageUrl) {
