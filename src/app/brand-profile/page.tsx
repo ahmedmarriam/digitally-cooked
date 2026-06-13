@@ -14,7 +14,6 @@ const LANGUAGES = [
 ];
 
 const VIBES = ["Professional", "Creative", "Playful", "Sophisticated", "Bold", "Authentic", "Innovative", "Community-driven", "Luxury", "Minimalist"];
-const FORMALITY_OPTIONS = ["Very Casual", "Casual", "Balanced", "Formal", "Very Formal"];
 const EMOTIONS = ["Inspired", "Empowered", "Excited", "Calm", "Confident", "Entertained", "Motivated", "Trusted"];
 const BUSINESS_SIZES = ["Solo / Freelancer", "Small team (2–10)", "Growing (11–50)", "Established brand (50+)"];
 const AGE_RANGES = ["13–17", "18–24", "25–34", "35–44", "45–54", "55–64", "65+"];
@@ -49,11 +48,12 @@ export default function BrandProfilePage() {
   const [logoName, setLogoName] = useState("");
   const [logoBase64, setLogoBase64] = useState("");
 
-  // Competitor intelligence — per platform
-  const [platformCompetitors, setPlatformCompetitors] = useState<Record<string, { name: string; posts: string }[]>>({});
-  const [platformAnalysing, setPlatformAnalysing] = useState<Record<string, boolean>>({});
+  // Competitor intelligence
   const [platformNicheIntelligence, setPlatformNicheIntelligence] = useState<Record<string, Record<string, string>>>({});
-  const [platformNicheError, setPlatformNicheError] = useState<Record<string, string>>({});
+  const [competitorUrls, setCompetitorUrls] = useState(["", "", ""]);
+  const [competitorAnalysing, setCompetitorAnalysing] = useState(false);
+  const [competitorIntelligence, setCompetitorIntelligence] = useState<Record<string, string> | null>(null);
+  const [competitorError, setCompetitorError] = useState("");
 
   // Social scanning
   const [socialUrls, setSocialUrls] = useState<Record<string, string>>({});
@@ -70,7 +70,6 @@ export default function BrandProfilePage() {
     brandMission: "", brandVision: "",
     // Brand Personality (from brand kit)
     primaryVibe: [] as string[],
-    formalityLevel: "",
     customerEmotion: [] as string[],
     businessSize: "",
     // Voice
@@ -110,6 +109,16 @@ export default function BrandProfilePage() {
       const data = await res.json();
       if (!res.ok || !data.brand) { setScanError(data.error || "Scan failed. Fill the form manually."); return; }
       const b = data.brand;
+      const tone = b.contentTone?.toLowerCase() ?? "";
+      const bType = b.businessType ?? "";
+      let inferredVibe: string[] = [];
+      if (tone === "warm" || tone === "humorous") inferredVibe = ["Creative", "Authentic"];
+      else if (tone === "professional" || tone === "educational") inferredVibe = ["Professional", "Innovative"];
+      else if (tone === "bold") inferredVibe = ["Bold", "Authentic"];
+      let inferredEmotion: string[] = ["Trusted", "Inspired"];
+      if (["Fitness", "Healthcare"].includes(bType)) inferredEmotion = ["Motivated", "Empowered"];
+      else if (["Education", "Tech"].includes(bType)) inferredEmotion = ["Confident", "Inspired"];
+
       setForm((prev) => ({
         ...prev,
         brandName: b.brandName || prev.brandName,
@@ -123,6 +132,8 @@ export default function BrandProfilePage() {
         visualStyle: VISUAL_STYLES.includes(b.visualStyle) ? b.visualStyle : prev.visualStyle,
         brandMission: b.brandMission || prev.brandMission,
         brandVision: b.brandVision || prev.brandVision,
+        primaryVibe: inferredVibe.length > 0 ? inferredVibe : prev.primaryVibe,
+        customerEmotion: inferredEmotion.length > 0 ? inferredEmotion : prev.customerEmotion,
       }));
       if (b.brandColors) {
         const hexes = [...(b.brandColors.match(/#[0-9A-Fa-f]{6}/g) ?? [])];
@@ -159,39 +170,45 @@ export default function BrandProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const analyseNiche = async (platform: string) => {
-    const comps = (platformCompetitors[platform] ?? []).filter((c) => c.name.trim() && c.posts.trim());
-    if (comps.length === 0) {
-      setPlatformNicheError((e) => ({ ...e, [platform]: "Add at least one competitor name and their posts." }));
-      return;
-    }
-    setPlatformNicheError((e) => ({ ...e, [platform]: "" }));
-    setPlatformAnalysing((a) => ({ ...a, [platform]: true }));
+  const analyseCompetitors = async () => {
+    const urls = competitorUrls.filter(u => u.trim());
+    if (urls.length === 0) { setCompetitorError("Add at least one competitor website."); return; }
+    setCompetitorError("");
+    setCompetitorAnalysing(true);
     try {
+      // Scan each competitor website
+      const results = await Promise.all(urls.map(async (url) => {
+        try {
+          const res = await fetch("/api/brand-profile/scan", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+          const data = await res.json();
+          return data.brand ? `${data.brand.brandName || url}: ${data.brand.businessDescription || ""} | Tone: ${data.brand.contentTone || ""} | Unique: ${data.brand.uniqueFactor || ""}` : null;
+        } catch { return null; }
+      }));
+      const validResults = results.filter(Boolean) as string[];
+      if (validResults.length === 0) { setCompetitorError("Could not scan any of those websites. Try different URLs."); return; }
+
+      // Feed to competitor analysis
       const res = await fetch("/api/competitor-scan", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ competitors: comps, platform }),
+        body: JSON.stringify({
+          competitors: validResults.map((r, i) => ({ name: `Competitor ${i+1}`, posts: r })),
+          platform: form.platforms[0] || "Instagram",
+        }),
       });
       const data = await res.json();
-      if (!res.ok || !data.intelligence) {
-        setPlatformNicheError((e) => ({ ...e, [platform]: data.error || "Analysis failed. Try again." }));
-        return;
+      if (data.intelligence) {
+        setCompetitorIntelligence(data.intelligence);
+        setPlatformNicheIntelligence(
+          form.platforms.reduce((acc, p) => ({ ...acc, [p]: data.intelligence }), {})
+        );
+      } else {
+        setCompetitorError("Analysis failed. Try again.");
       }
-      setPlatformNicheIntelligence((ni) => ({ ...ni, [platform]: data.intelligence }));
-    } catch {
-      setPlatformNicheError((e) => ({ ...e, [platform]: "Something went wrong. Try again." }));
-    } finally {
-      setPlatformAnalysing((a) => ({ ...a, [platform]: false }));
-    }
-  };
-
-  const getDefaultCompetitors = (platform: string) =>
-    platformCompetitors[platform] ?? [{ name: "", posts: "" }, { name: "", posts: "" }, { name: "", posts: "" }];
-
-  const updateCompetitor = (platform: string, idx: number, field: "name" | "posts", value: string) => {
-    const current = getDefaultCompetitors(platform);
-    const updated = current.map((c, i) => i === idx ? { ...c, [field]: value } : c);
-    setPlatformCompetitors((pc) => ({ ...pc, [platform]: updated }));
+    } catch { setCompetitorError("Something went wrong. Try again."); }
+    finally { setCompetitorAnalysing(false); }
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,7 +266,6 @@ export default function BrandProfilePage() {
           nicheIntelligence: Object.keys(platformNicheIntelligence).length > 0 ? JSON.stringify(platformNicheIntelligence) : null,
           // Brand personality (from brand kit)
           primaryVibe: form.primaryVibe.join(", "),
-          formalityLevel: form.formalityLevel,
           customerEmotion: form.customerEmotion.join(", "),
           businessSize: form.businessSize,
           ageRanges: form.ageRanges.join(", "),
@@ -315,7 +331,7 @@ export default function BrandProfilePage() {
                 {scanning ? "Scanning..." : "⚡ Scan Website"}
               </button>
             </div>
-            {scanSuccess && <div style={{ marginTop: "12px", padding: "10px 14px", borderRadius: "8px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#34d399", fontSize: "0.83rem", fontWeight: 600 }}>✓ Profile auto-filled — review and adjust below.</div>}
+            {scanSuccess && <div style={{ marginTop: "12px", padding: "10px 14px", borderRadius: "8px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#34d399", fontSize: "0.83rem", fontWeight: 600 }}>✓ Profile auto-filled — we&apos;ve suggested your brand personality too. Review and adjust.</div>}
             {scanError && <div style={{ marginTop: "12px", padding: "10px 14px", borderRadius: "8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", fontSize: "0.83rem" }}>{scanError}</div>}
             {!formVisible && (
               <div style={{ textAlign: "center", marginTop: "20px" }}>
@@ -373,13 +389,6 @@ export default function BrandProfilePage() {
                   ))}
                 </div>
               </Field>
-              <Field label="How formal is your brand?">
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {FORMALITY_OPTIONS.map((f) => (
-                    <button key={f} type="button" onClick={() => setForm({ ...form, formalityLevel: f })} style={pillBtn(form.formalityLevel === f, true)}>{f}</button>
-                  ))}
-                </div>
-              </Field>
               <Field label="How do you want customers to feel?" labelNote="(pick all that apply)">
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   {EMOTIONS.map((em) => (
@@ -430,14 +439,25 @@ export default function BrandProfilePage() {
               </Field>
               <Field label="Customer Interests">
                 <input type="text" placeholder="e.g. fitness, travel, self-improvement, cooking" value={form.interests} onChange={(e) => setForm({ ...form, interests: e.target.value })} style={inputStyle} onFocus={(e) => (e.target.style.borderColor = "#7B2FFF")} onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")} />
+                <button type="button" onClick={() => setForm({ ...form, interests: "not sure yet" })}
+                  style={{ background: "none", border: "none", color: "rgba(167,139,250,0.6)", fontSize: "0.78rem", cursor: "pointer", textDecoration: "underline", marginTop: "4px", padding: 0 }}>
+                  Not sure about your audience yet? Let AI figure it out →
+                </button>
               </Field>
-              <Field label="Top 3 Customer Pain Points" labelNote="(what problems do they face?)">
+              <Field label="Your 3 Biggest Content Challenges" labelNote="(what stops you from creating content consistently?)">
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {[0, 1, 2].map((i) => (
-                    <input key={i} type="text" placeholder={`Pain point ${i + 1}...`} value={(form.painPoints ?? ["", "", ""])[i] ?? ""}
-                      onChange={(e) => { const up = [...(form.painPoints ?? ["", "", ""])] as [string, string, string]; up[i] = e.target.value; setForm({ ...form, painPoints: up }); }}
-                      style={inputStyle} onFocus={(e) => (e.target.style.borderColor = "#7B2FFF")} onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")} />
-                  ))}
+                  {[0, 1, 2].map((i) => {
+                    const placeholders = [
+                      "e.g. I never know what to post",
+                      "e.g. I don't have time to create content",
+                      "e.g. My posts get no engagement",
+                    ];
+                    return (
+                      <input key={i} type="text" placeholder={placeholders[i]} value={(form.painPoints ?? ["", "", ""])[i] ?? ""}
+                        onChange={(e) => { const up = [...(form.painPoints ?? ["", "", ""])] as [string, string, string]; up[i] = e.target.value; setForm({ ...form, painPoints: up }); }}
+                        style={inputStyle} onFocus={(e) => (e.target.style.borderColor = "#7B2FFF")} onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")} />
+                    );
+                  })}
                 </div>
               </Field>
             </Section>
@@ -560,86 +580,34 @@ export default function BrandProfilePage() {
               </Field>
             </Section>
 
-            {/* ── NICHE INTELLIGENCE — per platform ── */}
+            {/* ── NICHE INTELLIGENCE ── */}
             {form.platforms.length > 0 && (
               <Section title="🔍 Niche Intelligence (Optional — but powerful)">
                 <div style={{ padding: "12px 16px", borderRadius: "10px", background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)" }}>
                   <p style={{ fontSize: "0.83rem", color: "rgba(241,241,241,0.6)", lineHeight: 1.6 }}>
-                    For each platform, add 2–3 top creators in your niche and paste their best performing hooks. Our AI studies <strong style={{ color: "#a78bfa" }}>what makes their content work on that specific platform</strong> — then writes yours to beat it. We never copy, only learn the principles.
+                    Add up to 3 competitor websites. We&apos;ll scan them, find what makes them stand out, and make sure your content beats them. <strong style={{ color: "#a78bfa" }}>No copy-pasting required.</strong>
                   </p>
                 </div>
-
-                {form.platforms.map((platform) => {
-                  const comps = getDefaultCompetitors(platform);
-                  const isAnalysing = platformAnalysing[platform] ?? false;
-                  const intelligence = platformNicheIntelligence[platform] ?? null;
-                  const err = platformNicheError[platform] ?? "";
-                  const platformPlaceholders: Record<string, string> = {
-                    Instagram: "'Stop scrolling if you want to grow'\n'Nobody tells you this about Instagram'\n'3 mistakes killing your reach'",
-                    TikTok: "'POV: you finally figured out content'\n'Things I wish someone told me earlier'\n'This blew up overnight and here's why'",
-                    LinkedIn: "'After 10 years in [industry], here's what I learned'\n'Unpopular opinion: [bold take]'\n'Most people get this wrong about [topic]'",
-                    Facebook: "'I almost gave up until I tried this'\n'Can anyone else relate to [situation]?'\n'Share this if you agree'",
-                    YouTube: "'I tested [thing] for 30 days. Here's what happened'\n'The truth about [topic] nobody talks about'\n'Stop doing this if you want results'",
-                  };
-
-                  return (
-                    <div key={platform} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(123,47,255,0.15)", borderRadius: "14px", padding: "20px" }}>
-                      <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#a78bfa", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "14px" }}>
-                        {platform} Competitors
-                      </p>
-
-                      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "14px" }}>
-                        {comps.map((comp, i) => (
-                          <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(123,47,255,0.1)", borderRadius: "10px", padding: "12px" }}>
-                            <p style={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(167,139,250,0.6)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>Competitor {i + 1}</p>
-                            <input
-                              type="text"
-                              placeholder={`${platform} handle or brand name (e.g. @creator)`}
-                              value={comp.name}
-                              onChange={(e) => updateCompetitor(platform, i, "name", e.target.value)}
-                              style={{ ...inputStyle, marginBottom: "8px", fontSize: "0.85rem" }}
-                              onFocus={(e) => (e.target.style.borderColor = "#7B2FFF")}
-                              onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")}
-                            />
-                            <textarea
-                              rows={3}
-                              placeholder={`Paste their top 3–5 hooks or captions...\n\n${platformPlaceholders[platform] ?? ""}`}
-                              value={comp.posts}
-                              onChange={(e) => updateCompetitor(platform, i, "posts", e.target.value)}
-                              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6, fontFamily: "inherit", fontSize: "0.83rem" }}
-                              onFocus={(e) => (e.target.style.borderColor = "#7B2FFF")}
-                              onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")}
-                            />
-                          </div>
-                        ))}
-                      </div>
-
-                      {err && (
-                        <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", fontSize: "0.8rem", marginBottom: "10px" }}>{err}</div>
-                      )}
-
-                      <button type="button" onClick={() => analyseNiche(platform)} disabled={isAnalysing}
-                        style={{ padding: "10px 20px", borderRadius: "9px", background: isAnalysing ? "rgba(123,47,255,0.3)" : intelligence ? "rgba(52,211,153,0.15)" : "rgba(123,47,255,0.15)", border: `1px solid ${intelligence ? "rgba(52,211,153,0.4)" : "rgba(123,47,255,0.4)"}`, color: intelligence ? "#34d399" : "#a78bfa", fontWeight: 700, fontSize: "0.83rem", cursor: isAnalysing ? "not-allowed" : "pointer", transition: "all 0.2s" }}>
-                        {isAnalysing ? `🔍 Analysing ${platform}...` : intelligence ? `✓ ${platform} Analysed — Re-analyse` : `🔍 Analyse ${platform} Niche`}
-                      </button>
-
-                      {intelligence && (
-                        <div style={{ marginTop: "12px", padding: "14px", borderRadius: "10px", background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.2)" }}>
-                          <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#34d399", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>✓ {platform} Niche Intelligence Ready</p>
-                          {intelligence.hookPatterns && (
-                            <p style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.5)", lineHeight: 1.5, marginBottom: "6px" }}><strong style={{ color: "rgba(241,241,241,0.7)" }}>Hook patterns:</strong> {intelligence.hookPatterns}</p>
-                          )}
-                          {intelligence.whatMakesItWork && (
-                            <p style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.5)", lineHeight: 1.5, marginBottom: "6px" }}><strong style={{ color: "rgba(241,241,241,0.7)" }}>What works:</strong> {intelligence.whatMakesItWork}</p>
-                          )}
-                          {intelligence.howToDoItBetter && (
-                            <p style={{ fontSize: "0.78rem", color: "rgba(167,139,250,0.7)", lineHeight: 1.5 }}><strong style={{ color: "#a78bfa" }}>How we&apos;ll beat them:</strong> {intelligence.howToDoItBetter}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {[0, 1, 2].map((i) => (
+                    <input key={i} type="text" placeholder={`Competitor ${i+1} website (e.g. https://competitor.com)`}
+                      value={competitorUrls[i]} onChange={(e) => { const u = [...competitorUrls]; u[i] = e.target.value; setCompetitorUrls(u); }}
+                      style={inputStyle} onFocus={(e) => (e.target.style.borderColor = "#7B2FFF")} onBlur={(e) => (e.target.style.borderColor = "rgba(123,47,255,0.2)")} />
+                  ))}
+                </div>
+                {competitorError && <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", fontSize: "0.8rem" }}>{competitorError}</div>}
+                <button type="button" onClick={analyseCompetitors} disabled={competitorAnalysing}
+                  style={{ padding: "10px 20px", borderRadius: "9px", background: competitorAnalysing ? "rgba(123,47,255,0.3)" : competitorIntelligence ? "rgba(52,211,153,0.15)" : "rgba(123,47,255,0.15)", border: `1px solid ${competitorIntelligence ? "rgba(52,211,153,0.4)" : "rgba(123,47,255,0.4)"}`, color: competitorIntelligence ? "#34d399" : "#a78bfa", fontWeight: 700, fontSize: "0.83rem", cursor: competitorAnalysing ? "not-allowed" : "pointer" }}>
+                  {competitorAnalysing ? "🔍 Scanning competitors..." : competitorIntelligence ? "✓ Competitors Analysed — Re-analyse" : "🔍 Scan & Analyse Competitors"}
+                </button>
+                {competitorIntelligence && (
+                  <div style={{ padding: "14px", borderRadius: "10px", background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.2)" }}>
+                    <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#34d399", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>✓ Competitor Intelligence Ready</p>
+                    {competitorIntelligence.hookPatterns && <p style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.5)", lineHeight: 1.5, marginBottom: "6px" }}><strong style={{ color: "rgba(241,241,241,0.7)" }}>Hook patterns:</strong> {competitorIntelligence.hookPatterns}</p>}
+                    {competitorIntelligence.whatMakesItWork && <p style={{ fontSize: "0.78rem", color: "rgba(241,241,241,0.5)", lineHeight: 1.5, marginBottom: "6px" }}><strong style={{ color: "rgba(241,241,241,0.7)" }}>What works:</strong> {competitorIntelligence.whatMakesItWork}</p>}
+                    {competitorIntelligence.howToDoItBetter && <p style={{ fontSize: "0.78rem", color: "rgba(167,139,250,0.7)", lineHeight: 1.5 }}><strong style={{ color: "#a78bfa" }}>How we&apos;ll beat them:</strong> {competitorIntelligence.howToDoItBetter}</p>}
+                  </div>
+                )}
               </Section>
             )}
 
