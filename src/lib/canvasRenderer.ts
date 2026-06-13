@@ -293,356 +293,350 @@ async function renderSolidPost(
 }
 
 // ─── Template: BOLD ──────────────────────────────────────────
+// Dark base, large brand color block at bottom, dominant hook text
 
 async function renderBold(ctx: CanvasRenderingContext2D, post: PostData, brand: BrandData, size: number) {
-  const lighter = adjustColor(brand.primaryColor, 40);
-  const darker = adjustColor(brand.primaryColor, -60);
-  const tc = brand.textColor;
-  const pad = 80;
+  const pad = 72;
   const font = post.fontFamily ?? "Inter";
-  const hookColor = post.hookColor ?? tc;
+  const hookColor = post.hookColor ?? "#ffffff";
+  const dark = adjustColor(brand.primaryColor, -160);
 
-  // Background gradient — diagonal
-  const grad = ctx.createLinearGradient(0, 0, size * 0.4, size);
-  grad.addColorStop(0, lighter);
-  grad.addColorStop(1, darker);
-  ctx.fillStyle = grad;
+  // Deep dark background
+  ctx.fillStyle = dark;
   ctx.fillRect(0, 0, size, size);
 
-  // Decorative circles
-  ctx.beginPath();
-  ctx.arc(size * 0.88, size * 0.12, size * 0.3, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.07)";
-  ctx.fill();
+  // Bold brand color block — bottom third
+  ctx.fillStyle = brand.primaryColor;
+  ctx.fillRect(0, size * 0.72, size, size * 0.28);
 
-  ctx.beginPath();
-  ctx.arc(size * 0.08, size * 0.9, size * 0.2, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.04)";
-  ctx.fill();
+  // Thin horizontal rule separating sections
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.fillRect(0, size * 0.72, size, 1);
 
-  // Brand name — small caps, top
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.55;
-  ctx.font = `700 ${Math.floor(size * 0.02)}px ${font}, sans-serif`;
-  ctx.fillText(brand.name.toUpperCase().substring(0, 20), pad, 86);
-  ctx.globalAlpha = 1;
-
-  // Calculate text Y position based on textY (0=top, 100=bottom)
-  const baseHookY = 195;
-  const textYPos = post.textY ?? 100;
-  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);  // Center point
-
-  // Hook — large, punchy
-  ctx.fillStyle = hookColor;
-  ctx.font = `900 ${Math.floor(size * 0.07 * (post.hookFontScale ?? 1))}px ${font}, sans-serif`;
-  ctx.textAlign = post.textAlign ?? "left";
-  const hookY = baseHookY + yOffset;
-  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 70), pad, hookY, size - pad * 2, Math.floor(size * 0.085 * (post.hookFontScale ?? 1)), 3, post.textAlign ?? "left");
+  // Large ghost initial — top right, decorative
+  const initial = (brand.name ?? "B").charAt(0).toUpperCase();
+  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  ctx.font = `900 ${Math.floor(size * 0.7)}px ${font}, sans-serif`;
+  ctx.textAlign = "right";
+  ctx.fillText(initial, size + size * 0.05, size * 0.68);
   ctx.textAlign = "left";
 
-  // Thin accent line after hook
-  const divY = hookY + hookLines * Math.floor(size * 0.085) + 28;
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.35;
-  ctx.fillRect(pad, divY, size * 0.22, 2);
+  // Brand name — small, top left, spaced
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.9;
+  ctx.font = `700 ${Math.floor(size * 0.019)}px ${font}, sans-serif`;
+  ctx.letterSpacing = "3px";
+  ctx.fillText(brand.name.toUpperCase().substring(0, 18), pad, 80);
+  ctx.letterSpacing = "0px";
   ctx.globalAlpha = 1;
 
-  // Caption — readable body text (respect showCaption flag)
-  if (post.showCaption !== false) {
-    ctx.fillStyle = tc;
-    ctx.globalAlpha = 0.78;
-    ctx.font = `400 ${Math.floor(size * 0.028)}px Inter, sans-serif`;
+  // Thin accent bar below brand name
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.6;
+  ctx.fillRect(pad, 96, size * 0.08, 2);
+  ctx.globalAlpha = 1;
+
+  // Hook — large, white, dominant
+  const hookFontSize = Math.floor(size * 0.076 * (post.hookFontScale ?? 1));
+  const hookLineH = Math.floor(hookFontSize * 1.22);
+  ctx.fillStyle = hookColor;
+  ctx.font = `900 ${hookFontSize}px ${font}, sans-serif`;
+  ctx.textAlign = post.textAlign ?? "left";
+  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 72), pad, size * 0.18, size - pad * 2, hookLineH, 4, post.textAlign ?? "left");
+  ctx.textAlign = "left";
+
+  // Caption — inside the color block, white
+  if (post.showCaption !== false && post.caption) {
+    ctx.fillStyle = "rgba(255,255,255,0.88)";
+    ctx.font = `400 ${Math.floor(size * 0.027)}px Inter, sans-serif`;
     ctx.textAlign = post.textAlign ?? "left";
-    wrapTextWithAlign(ctx, truncate(post.caption, 110), pad, divY + 46, size - pad * 2, Math.floor(size * 0.036), 3, post.textAlign ?? "left");
+    wrapTextWithAlign(ctx, truncate(post.caption, 100), pad, size * 0.755, size - pad * 2, Math.floor(size * 0.034), 2, post.textAlign ?? "left");
     ctx.textAlign = "left";
-    ctx.globalAlpha = 1;
   }
 
-  // CTA — solid white pill
-  const ctaY = size - 190;
-  const ctaW = Math.min(size * 0.62, post.cta.length * 15 + 80);
-  ctx.fillStyle = "rgba(255,255,255,0.18)";
-  roundRect(ctx, pad, ctaY, ctaW, 62, 31);
-  ctx.fill();
-  ctx.strokeStyle = tc;
-  ctx.lineWidth = 1.5;
-  ctx.globalAlpha = 0.5;
-  roundRect(ctx, pad, ctaY, ctaW, 62, 31);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
+  // CTA — bottom of color block, arrow style
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.font = `700 ${Math.floor(size * 0.024)}px Inter, sans-serif`;
+  ctx.fillText(`→ ${truncate(post.cta, 36)}`, pad, size - 36);
 
-  ctx.fillStyle = tc;
-  ctx.font = `700 ${Math.floor(size * 0.025)}px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(truncate(post.cta, 32), pad + ctaW / 2, ctaY + 40);
+  // Hashtags — far right, small
+  ctx.fillStyle = "rgba(255,255,255,0.4)";
+  ctx.font = `400 ${Math.floor(size * 0.017)}px Inter, sans-serif`;
+  ctx.textAlign = "right";
+  ctx.fillText(truncate((post.hashtags ?? "").split(" ").slice(0, 4).join(" "), 50), size - pad, size - 36);
   ctx.textAlign = "left";
 
+  void hookLines;
 }
 
 // ─── Template: GRADIENT ──────────────────────────────────────
+// Rich radial glow, centered composition, magazine feel
 
 async function renderGradient(ctx: CanvasRenderingContext2D, post: PostData, brand: BrandData, size: number) {
-  const tc = brand.textColor;
-  const pad = 100;
+  const pad = 80;
+  const dark = adjustColor(brand.primaryColor, -155);
+  const mid = adjustColor(brand.primaryColor, -80);
 
-  // Diagonal gradient
-  const grad = ctx.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, adjustColor(brand.primaryColor, 30));
-  grad.addColorStop(0.5, brand.primaryColor);
-  grad.addColorStop(1, brand.secondaryColor);
-  ctx.fillStyle = grad;
+  // Dark background
+  ctx.fillStyle = dark;
   ctx.fillRect(0, 0, size, size);
 
-  // Decorative circles
-  ctx.beginPath();
-  ctx.arc(size * 0.9, size * 0.1, size * 0.3, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.06)";
-  ctx.fill();
+  // Radial glow from center — rich depth
+  const radial = ctx.createRadialGradient(size * 0.5, size * 0.45, 0, size * 0.5, size * 0.45, size * 0.65);
+  radial.addColorStop(0, adjustColor(brand.primaryColor, -20) + "55");
+  radial.addColorStop(0.5, mid + "22");
+  radial.addColorStop(1, "transparent");
+  ctx.fillStyle = radial;
+  ctx.fillRect(0, 0, size, size);
 
-  ctx.beginPath();
-  ctx.arc(size * 0.1, size * 0.85, size * 0.24, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.05)";
-  ctx.fill();
-
-  // Brand name (centered)
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.65;
-  ctx.font = `700 ${Math.floor(size * 0.02)}px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(brand.name.toUpperCase().substring(0, 20), size / 2, 90);
-  ctx.globalAlpha = 1;
-
-  // Calculate text Y position based on textY (0=top, 100=bottom)
-  const baseHookY = 280;
-  const textYPos = post.textY ?? 100;
-  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);
-
-  // Hook (use textAlign if customized, else centered)
-  const hookY = baseHookY + yOffset;
-  ctx.fillStyle = post.hookColor ?? tc;
-  ctx.font = `900 ${Math.floor(size * 0.065 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Inter"}, sans-serif`;
-  if (post.textAlign && post.textAlign !== "center") {
-    // Use custom alignment
-    ctx.textAlign = post.textAlign;
-    const alignX = post.textAlign === "right" ? size - pad : pad;
-    wrapTextWithAlign(ctx, truncate(post.hook, 80), alignX, hookY, size - pad * 2, Math.floor(size * 0.08), 3, post.textAlign);
-  } else {
-    // Default centered
-    ctx.textAlign = "center";
-    wrapTextCentered(ctx, truncate(post.hook, 80), size / 2, hookY, size - pad * 2, Math.floor(size * 0.08), 3);
-  }
-
-  // Caption (centered by default, respects showCaption flag)
-  if (post.showCaption !== false) {
-    ctx.fillStyle = tc;
-    ctx.globalAlpha = 0.78;
-    ctx.font = `400 ${Math.floor(size * 0.027)}px Inter, sans-serif`;
-    const captionY = hookY + 250;  // Offset from hook
-    if (post.textAlign && post.textAlign !== "center") {
-      ctx.textAlign = post.textAlign;
-      const alignX = post.textAlign === "right" ? size - pad : pad;
-      wrapTextWithAlign(ctx, truncate(post.caption, 100), alignX, captionY, size - pad * 2, Math.floor(size * 0.034), 2, post.textAlign);
-    } else {
-      ctx.textAlign = "center";
-      wrapTextCentered(ctx, truncate(post.caption, 100), size / 2, captionY, size - pad * 2, Math.floor(size * 0.034), 2);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  // CTA Button (centered)
-  const ctaW = Math.min(size * 0.5, post.cta.length * 18 + 100);
-  const ctaX = (size - ctaW) / 2;
-  const ctaY = size - 200;
-  ctx.fillStyle = "rgba(255,255,255,0.92)";
-  roundRect(ctx, ctaX, ctaY, ctaW, 68, 34);
-  ctx.fill();
-
+  // Top edge accent — full width brand color stripe
   ctx.fillStyle = brand.primaryColor;
-  ctx.font = `700 ${Math.floor(size * 0.027)}px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(truncate(post.cta, 28), size / 2, ctaY + 44);
+  ctx.fillRect(0, 0, size, 5);
 
-  // Hashtags (centered)
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.45;
-  ctx.font = `400 ${Math.floor(size * 0.019)}px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(truncate((post.hashtags ?? "").split(" ").slice(0, 5).join(" "), 60), size / 2, size - 30);
+  // Bottom edge stripe
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.4;
+  ctx.fillRect(0, size - 3, size, 3);
   ctx.globalAlpha = 1;
+
+  // Brand name — centered top
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.95;
+  ctx.font = `700 ${Math.floor(size * 0.019)}px Inter, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.letterSpacing = "4px";
+  ctx.fillText(brand.name.toUpperCase().substring(0, 18), size / 2, 75);
+  ctx.letterSpacing = "0px";
+  ctx.globalAlpha = 1;
+
+  // Hook — centered, very large
+  const hookFontSize = Math.floor(size * 0.072 * (post.hookFontScale ?? 1));
+  ctx.fillStyle = post.hookColor ?? "#ffffff";
+  ctx.font = `900 ${hookFontSize}px ${post.fontFamily ?? "Inter"}, sans-serif`;
+  ctx.textAlign = post.textAlign ?? "center";
+  const hX = (post.textAlign === "left") ? pad : (post.textAlign === "right") ? size - pad : size / 2;
+  wrapTextWithAlign(ctx, truncate(post.hook, 80), hX, size * 0.3, size - pad * 2, Math.floor(hookFontSize * 1.2), 3, post.textAlign ?? "center");
+  ctx.textAlign = "left";
+
+  // Thin divider line — centered
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.7;
+  ctx.fillRect(size * 0.35, size * 0.62, size * 0.3, 2);
+  ctx.globalAlpha = 1;
+
+  // Caption — centered, below divider
+  if (post.showCaption !== false && post.caption) {
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.font = `400 ${Math.floor(size * 0.026)}px Inter, sans-serif`;
+    ctx.textAlign = post.textAlign ?? "center";
+    const cX = (post.textAlign === "left") ? pad : (post.textAlign === "right") ? size - pad : size / 2;
+    wrapTextWithAlign(ctx, truncate(post.caption, 100), cX, size * 0.66, size - pad * 2, Math.floor(size * 0.033), 2, post.textAlign ?? "center");
+    ctx.textAlign = "left";
+  }
+
+  // CTA pill — centered
+  const ctaText = truncate(post.cta, 30);
+  ctx.font = `700 ${Math.floor(size * 0.024)}px Inter, sans-serif`;
+  const ctaW = ctx.measureText(ctaText).width + 80;
+  const ctaX = (size - ctaW) / 2;
+  const ctaY = size - 156;
+  ctx.fillStyle = brand.primaryColor;
+  roundRect(ctx, ctaX, ctaY, ctaW, 56, 28);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.fillText(ctaText, size / 2, ctaY + 38);
+  ctx.textAlign = "left";
+
+  // Hashtags
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.font = `400 ${Math.floor(size * 0.017)}px Inter, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.fillText(truncate((post.hashtags ?? "").split(" ").slice(0, 5).join(" "), 55), size / 2, size - 28);
   ctx.textAlign = "left";
 }
 
 // ─── Template: SPLIT ─────────────────────────────────────────
+// Bold left color block + dark right panel — editorial asymmetry
 
 async function renderSplit(ctx: CanvasRenderingContext2D, post: PostData, brand: BrandData, size: number) {
-  const splitX = size * 0.58;
-  const pad = 72;
-  const tc = brand.textColor;
-  const rightBg = adjustColor(brand.primaryColor, -90);
+  const splitX = size * 0.54;
+  const pad = 68;
+  const dark = adjustColor(brand.primaryColor, -150);
   const rightW = size - splitX;
 
-  // Left panel — brand primary color
+  // Right panel — very dark
+  ctx.fillStyle = dark;
+  ctx.fillRect(0, 0, size, size);
+
+  // Left panel — brand primary
   ctx.fillStyle = brand.primaryColor;
   ctx.fillRect(0, 0, splitX, size);
 
-  // Right panel — darker shade
-  ctx.fillStyle = rightBg;
-  ctx.fillRect(splitX, 0, rightW, size);
+  // Subtle diagonal overlay on left panel for depth
+  const leftGrad = ctx.createLinearGradient(0, 0, splitX, size);
+  leftGrad.addColorStop(0, "rgba(255,255,255,0.12)");
+  leftGrad.addColorStop(1, "rgba(0,0,0,0.18)");
+  ctx.fillStyle = leftGrad;
+  ctx.fillRect(0, 0, splitX, size);
 
-  // Right panel: large decorative brand initial letter
-  const initial = (brand.name ?? "B").charAt(0).toUpperCase();
-  ctx.fillStyle = "rgba(255,255,255,0.06)";
-  ctx.font = `900 ${Math.floor(size * 0.55)}px Inter, sans-serif`;
+  // Right panel: huge ghost text — brand name
+  ctx.fillStyle = "rgba(255,255,255,0.04)";
+  ctx.font = `900 ${Math.floor(size * 0.22)}px Inter, sans-serif`;
   ctx.textAlign = "center";
-  ctx.fillText(initial, splitX + rightW / 2, size * 0.68);
+  ctx.fillText((brand.name ?? "").substring(0, 4).toUpperCase(), splitX + rightW / 2, size * 0.55);
   ctx.textAlign = "left";
 
-  // Right panel: vertical brand name
-  ctx.save();
-  ctx.translate(splitX + rightW / 2, size * 0.85);
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
-  ctx.font = `700 ${Math.floor(size * 0.018)}px Inter, sans-serif`;
+  // Right panel: brand name small — vertical center
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.85;
+  ctx.font = `600 ${Math.floor(size * 0.017)}px Inter, sans-serif`;
   ctx.textAlign = "center";
-  ctx.fillText(brand.name.toUpperCase().substring(0, 14), 0, 0);
-  ctx.restore();
-  ctx.textAlign = "left";
-
-  // Right panel: accent line
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.25;
-  ctx.fillRect(splitX + rightW * 0.2, size * 0.88, rightW * 0.6, 2);
-  ctx.globalAlpha = 1;
-
-  // Left: brand name top
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.55;
-  ctx.font = `700 ${Math.floor(size * 0.019)}px Inter, sans-serif`;
-  ctx.letterSpacing = "2px";
-  ctx.fillText(brand.name.toUpperCase().substring(0, 18), pad, 88);
+  ctx.letterSpacing = "3px";
+  ctx.fillText(brand.name.toUpperCase().substring(0, 12), splitX + rightW / 2, size * 0.88);
   ctx.letterSpacing = "0px";
   ctx.globalAlpha = 1;
-
-  // Calculate text Y position based on textY (0=top, 100=bottom)
-  const baseHookY = 210;
-  const textYPos = post.textY ?? 100;
-  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);
-
-  // Left: hook — large and bold (use editor customizations)
-  const hookY = baseHookY + yOffset;
-  ctx.fillStyle = post.hookColor ?? tc;
-  ctx.font = `900 ${Math.floor(size * 0.064 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Inter"}, sans-serif`;
-  ctx.textAlign = post.textAlign ?? "left";
-  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 65), pad, hookY, splitX - pad * 1.6, Math.floor(size * 0.078), 3, post.textAlign ?? "left");
   ctx.textAlign = "left";
 
-  // Left: thin divider after hook
-  const divY = hookY + hookLines * Math.floor(size * 0.078) + 24;
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.35;
-  ctx.fillRect(pad, divY, size * 0.18, 2);
+  // Right panel: small accent dot
+  ctx.beginPath();
+  ctx.arc(splitX + rightW / 2, size * 0.92, 3, 0, Math.PI * 2);
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.6;
+  ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Left: caption (respects showCaption flag)
-  if (post.showCaption !== false) {
-    ctx.fillStyle = tc;
-    ctx.globalAlpha = 0.75;
-    ctx.font = `400 ${Math.floor(size * 0.025)}px Inter, sans-serif`;
+  // Left: brand name — top, small
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.font = `700 ${Math.floor(size * 0.018)}px Inter, sans-serif`;
+  ctx.fillText(brand.name.toUpperCase().substring(0, 16), pad, 76);
+
+  // Left: bold white horizontal rule
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.fillRect(pad, 92, size * 0.12, 2);
+
+  // Left: hook — large, white
+  const hookFontSize = Math.floor(size * 0.068 * (post.hookFontScale ?? 1));
+  ctx.fillStyle = post.hookColor ?? "#ffffff";
+  ctx.font = `900 ${hookFontSize}px ${post.fontFamily ?? "Inter"}, sans-serif`;
+  ctx.textAlign = post.textAlign ?? "left";
+  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 62), pad, size * 0.2, splitX - pad * 1.5, Math.floor(hookFontSize * 1.2), 4, post.textAlign ?? "left");
+  ctx.textAlign = "left";
+
+  // Left: thin divider
+  const divY = size * 0.2 + hookLines * Math.floor(hookFontSize * 1.2) + 24;
+  ctx.fillStyle = "rgba(255,255,255,0.3)";
+  ctx.fillRect(pad, divY, size * 0.14, 1.5);
+
+  // Left: caption
+  if (post.showCaption !== false && post.caption) {
+    ctx.fillStyle = "rgba(255,255,255,0.78)";
+    ctx.font = `400 ${Math.floor(size * 0.024)}px Inter, sans-serif`;
     ctx.textAlign = post.textAlign ?? "left";
-    wrapTextWithAlign(ctx, truncate(post.caption, 90), pad, divY + 44, splitX - pad * 1.6, Math.floor(size * 0.032), 3, post.textAlign ?? "left");
+    wrapTextWithAlign(ctx, truncate(post.caption, 85), pad, divY + 40, splitX - pad * 1.5, Math.floor(size * 0.031), 3, post.textAlign ?? "left");
     ctx.textAlign = "left";
-    ctx.globalAlpha = 1;
   }
 
-  // Left: CTA button
-  const ctaY = size - 168;
-  const ctaW = Math.min(splitX - pad * 2, post.cta.length * 13 + 64);
-  ctx.fillStyle = "rgba(255,255,255,0.92)";
-  roundRect(ctx, pad, ctaY, ctaW, 56, 28);
-  ctx.fill();
-
-  ctx.fillStyle = brand.primaryColor;
-  ctx.font = `700 ${Math.floor(size * 0.023)}px Inter, sans-serif`;
+  // Left: CTA — bottom, outlined pill
+  const ctaY = size - 148;
+  const ctaText = truncate(post.cta, 24);
+  ctx.font = `700 ${Math.floor(size * 0.022)}px Inter, sans-serif`;
+  const ctaW = Math.min(splitX - pad * 1.8, ctx.measureText(ctaText).width + 56);
+  ctx.strokeStyle = "rgba(255,255,255,0.8)";
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, pad, ctaY, ctaW, 50, 25);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
   ctx.textAlign = "center";
-  ctx.fillText(truncate(post.cta, 26), pad + ctaW / 2, ctaY + 37);
+  ctx.fillText(ctaText, pad + ctaW / 2, ctaY + 33);
   ctx.textAlign = "left";
 
-  // Left: hashtags — small, bottom
-  ctx.fillStyle = tc;
-  ctx.globalAlpha = 0.38;
-  ctx.font = `400 ${Math.floor(size * 0.017)}px Inter, sans-serif`;
-  ctx.fillText(truncate((post.hashtags ?? "").split(" ").slice(0, 4).join(" "), 50), pad, size - 28);
-  ctx.globalAlpha = 1;
+  // Left: hashtags
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.font = `400 ${Math.floor(size * 0.016)}px Inter, sans-serif`;
+  ctx.fillText(truncate((post.hashtags ?? "").split(" ").slice(0, 4).join(" "), 44), pad, size - 30);
 }
 
 // ─── Template: EDITORIAL ─────────────────────────────────────
+// Dark magazine — typographic hierarchy, brand color as sole accent
 
 async function renderEditorial(ctx: CanvasRenderingContext2D, post: PostData, brand: BrandData, size: number) {
-  const bg = adjustColor(brand.primaryColor, -145);
-  const pad = 90;
+  const pad = 80;
+  const dark = adjustColor(brand.primaryColor, -158);
 
-  // Background
-  ctx.fillStyle = bg;
+  // Almost-black background
+  ctx.fillStyle = dark;
   ctx.fillRect(0, 0, size, size);
 
-  // Top accent line
+  // Left edge brand color stripe — bold, narrow
   ctx.fillStyle = brand.primaryColor;
-  ctx.fillRect(0, 0, size, 4);
+  ctx.fillRect(0, 0, 6, size);
 
-  // Bottom accent line
+  // Top right corner accent block
   ctx.fillStyle = brand.primaryColor;
-  ctx.fillRect(0, size - 4, size, 4);
-
-  // Brand name
-  ctx.fillStyle = brand.primaryColor;
-  ctx.globalAlpha = 0.9;
-  ctx.font = `700 ${Math.floor(size * 0.02)}px Inter, sans-serif`;
-  ctx.letterSpacing = "4px";
-  ctx.fillText(brand.name.toUpperCase().substring(0, 18), pad, 90);
+  ctx.globalAlpha = 0.15;
+  ctx.fillRect(size * 0.7, 0, size * 0.3, size * 0.3);
   ctx.globalAlpha = 1;
 
-  // Accent line
+  // Brand name — top, brand color
   ctx.fillStyle = brand.primaryColor;
-  ctx.fillRect(pad, 120, size * 0.2, 3);
+  ctx.font = `700 ${Math.floor(size * 0.02)}px Inter, sans-serif`;
+  ctx.letterSpacing = "5px";
+  ctx.fillText(brand.name.toUpperCase().substring(0, 16), pad, 78);
+  ctx.letterSpacing = "0px";
 
-  // Calculate text Y position based on textY (0=top, 100=bottom)
-  const baseHookY = 280;
-  const textYPos = post.textY ?? 100;
-  const yOffset = calculateTextYOffset(size, 200, textYPos) - (baseHookY + 100);
+  // Issue line — editorial feel
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.font = `400 ${Math.floor(size * 0.016)}px Inter, sans-serif`;
+  ctx.letterSpacing = "2px";
+  ctx.fillText("CONTENT STRATEGY", pad, 108);
+  ctx.letterSpacing = "0px";
 
-  // Hook (serif style, use editor customizations)
-  const hookY = baseHookY + yOffset;
-  ctx.fillStyle = post.hookColor ?? "white";
-  ctx.font = `800 ${Math.floor(size * 0.062 * (post.hookFontScale ?? 1))}px ${post.fontFamily ?? "Georgia"}, serif`;
+  // Thick divider under header area
+  ctx.fillStyle = brand.primaryColor;
+  ctx.globalAlpha = 0.4;
+  ctx.fillRect(pad, 124, size - pad * 2, 1);
+  ctx.globalAlpha = 1;
+
+  // Hook — large, white, left-aligned dominance
+  const hookFontSize = Math.floor(size * 0.074 * (post.hookFontScale ?? 1));
+  ctx.fillStyle = post.hookColor ?? "#ffffff";
+  ctx.font = `900 ${hookFontSize}px ${post.fontFamily ?? "Inter"}, sans-serif`;
   ctx.textAlign = post.textAlign ?? "left";
-  wrapTextWithAlign(ctx, truncate(post.hook, 90), pad, hookY, size - pad * 2, Math.floor(size * 0.076), 3, post.textAlign ?? "left");
+  const hookLines = wrapTextWithAlign(ctx, truncate(post.hook, 80), pad, size * 0.19, size - pad * 2, Math.floor(hookFontSize * 1.22), 4, post.textAlign ?? "left");
   ctx.textAlign = "left";
 
-  // Secondary accent line (offset based on hook)
-  const accentY = hookY + 170;
+  // Brand color accent line — after hook
+  const accentY = size * 0.19 + hookLines * Math.floor(hookFontSize * 1.22) + 28;
   ctx.fillStyle = brand.primaryColor;
-  ctx.globalAlpha = 0.8;
-  ctx.fillRect(pad, accentY, size * 0.18, 2);
-  ctx.globalAlpha = 1;
+  ctx.fillRect(pad, accentY, size * 0.1, 3);
 
-  // Caption (respects showCaption flag)
-  if (post.showCaption !== false) {
-    ctx.fillStyle = "rgba(255,255,255,0.65)";
-    ctx.font = `400 ${Math.floor(size * 0.026)}px Inter, sans-serif`;
+  // Caption — subdued, below accent
+  if (post.showCaption !== false && post.caption) {
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.font = `300 ${Math.floor(size * 0.027)}px Inter, sans-serif`;
     ctx.textAlign = post.textAlign ?? "left";
-    const captionY = accentY + 50;
-    wrapTextWithAlign(ctx, truncate(post.caption, 90), pad, captionY, size - pad * 2, Math.floor(size * 0.033), 2, post.textAlign ?? "left");
+    wrapTextWithAlign(ctx, truncate(post.caption, 100), pad, accentY + 48, size - pad * 2, Math.floor(size * 0.034), 3, post.textAlign ?? "left");
     ctx.textAlign = "left";
   }
 
-  // CTA arrow style
+  // Bottom bar — brand color background for CTA
   ctx.fillStyle = brand.primaryColor;
-  ctx.font = `700 ${Math.floor(size * 0.026)}px Inter, sans-serif`;
-  ctx.fillText(`→ ${truncate(post.cta, 32)}`, pad, size - 130);
+  ctx.fillRect(0, size - 100, size, 100);
 
-  // Hashtags
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.font = `400 ${Math.floor(size * 0.018)}px Inter, sans-serif`;
-  ctx.fillText(truncate((post.hashtags ?? "").split(" ").slice(0, 5).join(" "), 60), pad, size - 30);
+  // CTA — inside bottom bar, white
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `700 ${Math.floor(size * 0.026)}px Inter, sans-serif`;
+  ctx.fillText(`→ ${truncate(post.cta, 36)}`, pad, size - 56);
+
+  // Hashtags — right side of bottom bar
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.font = `400 ${Math.floor(size * 0.017)}px Inter, sans-serif`;
+  ctx.textAlign = "right";
+  ctx.fillText(truncate((post.hashtags ?? "").split(" ").slice(0, 4).join(" "), 50), size - pad, size - 56);
+  ctx.textAlign = "left";
+
+  void hookLines;
 }
 
 // ─── Logo Overlay ─────────────────────────────────────────────
