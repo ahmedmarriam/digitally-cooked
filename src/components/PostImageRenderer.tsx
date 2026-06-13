@@ -51,14 +51,14 @@ function getContrastColor(hex: string): string {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.45 ? "#111111" : "#ffffff";
 }
 
-// 60% of regular posts get DALL-E backgrounds, 70% of bonus posts.
+// 70% of regular posts get AI backgrounds, 80% of bonus posts.
 // Uses post_group (1-based) as the cycle index — globally unique per concept.
-// post_group % 10 → 1-6 = image (60%), 7-9,0 = solid for regular
-// post_group % 10 → 1-7 = image (70%), 8-9,0 = solid for bonus
+// post_group % 10 → 1-7 = image (70%), 8-9,0 = solid for regular
+// post_group % 10 → 1-8 = image (80%), 9,0 = solid for bonus
 function shouldUseDalle(postGroup: number, isBonus: boolean): boolean {
   const g = isNaN(postGroup) || postGroup < 1 ? 1 : postGroup;
   const idx = g % 10;
-  return isBonus ? idx < 7 : idx < 6;
+  return isBonus ? idx < 8 : idx < 7;
 }
 
 async function fetchDalleImage(ctx: {

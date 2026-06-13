@@ -57,39 +57,49 @@ Strict rules — NO EXCEPTIONS:
 - Pure visual only — text will be added separately`.trim();
 }
 
-async function generateFlux(prompt: string, apiKey: string): Promise<string | null> {
-  try {
-    const res = await fetch("https://api.together.xyz/v1/images/generations", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "black-forest-labs/FLUX.1-schnell",
-        prompt,
-        width: 1024,
-        height: 1024,
-        steps: 4,
-        n: 1,
-      }),
-    });
+async function generateFlux(prompt: string, apiKey: string, retries = 3): Promise<string | null> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch("https://api.together.xyz/v1/images/generations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "black-forest-labs/FLUX.1-schnell",
+          prompt,
+          width: 1024,
+          height: 1024,
+          steps: 4,
+          n: 1,
+        }),
+      });
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Flux error:", res.status, text);
+      if (res.status === 429) {
+        const wait = attempt * 2000;
+        console.warn(`Flux rate limited. Retrying in ${wait}ms (attempt ${attempt}/${retries})`);
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Flux error:", res.status, text);
+        return null;
+      }
+
+      const data = await res.json();
+      const item = data?.data?.[0];
+      if (item?.url) return item.url;
+      if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
+      return null;
+    } catch (err) {
+      console.error("Flux fetch error:", err);
       return null;
     }
-
-    const data = await res.json();
-    const item = data?.data?.[0];
-    if (item?.url) return item.url;
-    if (item?.b64_json) return `data:image/png;base64,${item.b64_json}`;
-    return null;
-  } catch (err) {
-    console.error("Flux fetch error:", err);
-    return null;
   }
+  return null;
 }
 
 export async function POST(request: NextRequest) {
