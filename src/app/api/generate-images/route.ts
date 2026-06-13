@@ -178,8 +178,8 @@ export async function POST(request: NextRequest) {
       return true;
     });
 
-    // Process up to 8 concepts per call — enough for one full batch
-    const uniqueConcepts = allConcepts.slice(0, 8);
+    // Process up to 3 concepts per call — stays within Together.ai rate limits
+    const uniqueConcepts = allConcepts.slice(0, 3);
 
     let generated = 0;
     let failed = 0;

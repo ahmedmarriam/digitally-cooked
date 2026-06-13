@@ -108,7 +108,7 @@ export function selectTemplate(brand: BrandContext, postIndex: number): Template
 export function shouldUseImage(postGroup: number, isBonus: boolean): boolean {
   const g = isNaN(postGroup) || postGroup < 1 ? 1 : postGroup;
   const idx = g % 10;  // 0-9
-  return isBonus ? idx < 7 : idx < 6;
+  return isBonus ? idx < 8 : idx < 7;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────
