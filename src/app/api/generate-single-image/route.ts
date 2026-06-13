@@ -14,15 +14,52 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 60;
 
-// Cycles so each post gets a different visual approach
-const VISUAL_APPROACHES = [
-  "a person naturally engaged in the activity — working, eating, in conversation, using a product — candid and real, not posed",
-  "an atmospheric environment or setting that represents the theme — no people, mood-driven, rich textures and natural light",
-  "close-up detail: hands working, a key object, a surface, a product — craft and texture visible",
-  "a lifestyle scene that represents the outcome or feeling — dynamic, authentic, shows context and story",
-  "abstract or conceptual composition — shapes, light, motion blur, patterns that visually represent the idea",
-  "editorial-style: a real moment captured, minimal staging, authentic environment, true to the brand world",
+/**
+ * Visual approaches split into PERSON and SCENE pools.
+ * Pattern: postIndex % 4 === 0 → person; all others → scene.
+ * This means only 1 in 4 posts shows a face — the rest are environments,
+ * objects, or abstractions. Prevents the "same woman 4 times" problem.
+ */
+const PERSON_APPROACHES = [
+  "a single person captured candidly — seen from the side, slightly behind, or at shoulder-level. Never staring at camera. Natural pose in their real environment. The setting is as important as the person",
+  "hands in motion — working, writing, creating, gesturing. No face visible. The hands tell the story. Close and intimate, sharp focus on what they're doing",
 ];
+
+const SCENE_APPROACHES = [
+  "an atmospheric environment or setting — NO people. The space itself carries the emotion. Mood-driven, rich textures, deliberate natural light, negative space",
+  "close-up of a meaningful object or surface — a product, a tool, a texture, fabric, food, a book, a desk. NO people. Craft and material are visible, beautifully lit",
+  "abstract or conceptual composition — shapes, light beams, shadows, motion blur, bokeh, geometric patterns that represent the post idea. NO people. Visually striking",
+  "a styled flat-lay or still life — purposeful arrangement of objects relevant to the brand world. Viewed from above or at slight angle. Clean, designed, intentional. NO people",
+  "an environment shot wide — a room, a street, a workspace, nature — seen without any person present. Shows the world the brand inhabits. Atmospheric and considered",
+];
+
+// Cultural context based on brand location — makes images feel authentic to the market
+function getCulturalContext(location: string): string {
+  const loc = (location ?? "").toLowerCase();
+
+  if (
+    loc.includes("pakistan") || loc.includes("lahore") || loc.includes("karachi") ||
+    loc.includes("islamabad") || loc.includes("peshawar") || loc.includes("faisalabad") ||
+    loc.includes("multan") || loc.includes("rawalpindi") || loc.includes("quetta")
+  ) {
+    return `CULTURAL CONTEXT — CRITICAL: This brand is Pakistani. All people must have Pakistani South Asian appearance and aesthetic.
+- Pakistani urban style: smart casuals, modest wear, kurtas, shalwar kameez, or contemporary western clothing
+- Pakistani home and office aesthetics: warm lighting, marble floors, ornate textiles, Pakistani architecture
+- Lahore/Karachi professional class visual feel — aspirational but grounded
+- STRICTLY NOT Indian: no Indian cultural markers, no Indian styling, no Bollywood aesthetic, no bindis, no Indian street contexts
+- People should feel Pakistani — NOT generically South Asian, NOT Indian`;
+  }
+  if (loc.includes("uae") || loc.includes("dubai") || loc.includes("abu dhabi") || loc.includes("sharjah")) {
+    return "CULTURAL CONTEXT: Modern Gulf/UAE aesthetic — sleek, aspirational, multicultural Dubai setting. Contemporary architecture, luxury interiors.";
+  }
+  if (loc.includes("uk") || loc.includes("united kingdom") || loc.includes("london")) {
+    return "CULTURAL CONTEXT: British setting — modern UK urban aesthetic. Diverse British representation. British interiors and city environments.";
+  }
+  if (loc.includes("india") || loc.includes("mumbai") || loc.includes("delhi") || loc.includes("bangalore")) {
+    return "CULTURAL CONTEXT: Modern urban Indian aesthetic — contemporary Indian fashion and environments. Vibrant but professional.";
+  }
+  return "";
+}
 
 // Platform-specific viral tactics to inject into prompts
 const PLATFORM_TACTICS: Record<string, string> = {
@@ -66,41 +103,47 @@ function buildPrompt(body: {
   brandName: string;
   businessType: string;
   visualStyle?: string;
+  location?: string;
   postIndex: number;
   nicheIntelligence?: string;
   platform?: string;
 }): string {
-  const { imagePrompt, hook, caption, brandName, businessType, visualStyle, postIndex, nicheIntelligence, platform } = body;
-  const approach = VISUAL_APPROACHES[postIndex % VISUAL_APPROACHES.length];
+  const { imagePrompt, hook, caption, brandName, businessType, visualStyle, location, postIndex, nicheIntelligence, platform } = body;
+
+  // Smart subject variety: only 1 in 4 posts shows a person (prevents "same face 4 times")
+  const isPersonPost = postIndex % 4 === 0;
+  const approach = isPersonPost
+    ? PERSON_APPROACHES[Math.floor(postIndex / 4) % PERSON_APPROACHES.length]
+    : SCENE_APPROACHES[postIndex % SCENE_APPROACHES.length];
+
   const platformName = platform?.toLowerCase() ?? "instagram";
   const platformTactic = PLATFORM_TACTICS[platformName] || PLATFORM_TACTICS.instagram;
 
-  // Brand aesthetic fingerprint — applied to EVERY image so the grid looks cohesive
+  // Brand aesthetic fingerprint — keeps all images tonally consistent
   const brandAesthetic = getBrandAesthetic(visualStyle ?? "", businessType);
+
+  // Cultural context — ensures images feel authentic to the brand's market
+  const culturalContext = getCulturalContext(location ?? "");
+  const culturalLine = culturalContext ? `\n${culturalContext}\n` : "";
 
   // Use the pre-written image prompt as the content core if available
   const contentCore = imagePrompt
     ? imagePrompt
     : `${hook}. ${caption.substring(0, 120)}`;
 
-  // If niche intelligence exists, use it to differentiate and make more viral
+  // Niche intelligence for competitive differentiation
   const nicheMode = nicheIntelligence
-    ? `
-
-NICHE INTELLIGENCE (make this visually DIFFERENT from what competitors are doing):
-${nicheIntelligence}
-
-Your visual strategy: Stand out in the ${businessType} space by using unexpected compositions, unique lighting, or authentic moments competitors are missing.`
+    ? `\nNICHE INTELLIGENCE (make this visually DIFFERENT from competitors):\n${nicheIntelligence}\nStand out by using unexpected compositions or authentic moments competitors are missing.`
     : "";
 
   return `Social media background image for ${brandName}, a ${businessType} brand.
 
-BRAND VISUAL DIRECTION — apply this aesthetic consistently to every image so the feed looks like one curated body of work:
+BRAND VISUAL DIRECTION — apply consistently across all images so the grid reads as one curated body of work:
 ${brandAesthetic}
-
+${culturalLine}
 Platform: ${platformName} — ${platformTactic}.
 
-Composition approach for this specific post: ${approach}.
+Subject approach for this post: ${approach}.
 
 What this post is about: ${contentCore}
 ${nicheMode}
@@ -108,14 +151,14 @@ ${nicheMode}
 Strict rules — NO EXCEPTIONS:
 - NO text, words, letters, numbers, signs, labels, captions, watermarks, or typography of any kind
 - NO overlaid graphics, logos, or UI elements
-- The image must be directly and obviously relevant to the post topic
-- Do NOT show random faces staring at camera — if showing a person, show them naturally in context
-- Do NOT include any religious markers (bindi, tilak, cross, hijab, etc.) — keep it culturally neutral
-- Do NOT use stock photo clichés: no fake smiles, no business handshakes, no pointing at whiteboards
-- High quality, cinematic, social-media-ready photograph or illustration
+- The image must be directly relevant to the post topic
+- If showing a person: NEVER staring at camera. Show them in profile, from behind, or naturally engaged in context
+- Do NOT include any religious markers (bindi, tilak, cross, hijab, etc.)
+- Do NOT use stock photo clichés: no fake smiles, no pointing at whiteboards, no staged business handshakes
+- High quality, cinematic, social-media-ready photograph
 - Square 1:1 composition
 - Pure visual only — text will be added separately
-- GRID COHESION: This image must feel like it belongs in the same curated Instagram feed as all other images for this brand`.trim();
+- GRID COHESION: This image must feel like it belongs in the same curated Instagram feed as every other image for this brand — same mood, same lighting feel, same world`.trim();
 }
 
 async function generateDalle(prompt: string, apiKey: string): Promise<string | null> {
@@ -165,6 +208,7 @@ export async function POST(request: NextRequest) {
     brandName: string;
     businessType: string;
     visualStyle?: string;
+    location?: string;
     postIndex: number;
     nicheIntelligence?: string;
     platform?: string;

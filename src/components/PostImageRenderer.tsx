@@ -24,6 +24,7 @@ interface Props {
     content_tone: string;
     visual_style: string;
     business_type: string;
+    location?: string;
     logo_url: string | null;
   };
   nicheIntelligence?: string;  // Competitive insights to guide viral image generation
@@ -71,6 +72,7 @@ async function fetchDalleImage(ctx: {
   brandName: string;
   businessType: string;
   visualStyle?: string;
+  location?: string;
   postIndex: number;
   nicheIntelligence?: string;
   platform?: string;
@@ -86,6 +88,7 @@ async function fetchDalleImage(ctx: {
         brandName: ctx.brandName,
         businessType: ctx.businessType,
         visualStyle: ctx.visualStyle,
+        location: ctx.location,
         postIndex: ctx.postIndex,
         nicheIntelligence: ctx.nicheIntelligence,
         platform: ctx.platform,
@@ -164,6 +167,7 @@ export default function PostImageRenderer({ post, brand, nicheIntelligence, card
           brandName: brand.brand_name,
           businessType: brand.business_type,
           visualStyle: brand.visual_style,
+          location: brand.location,
           postIndex: postGroup,
           nicheIntelligence: nicheIntelligence,
           platform: post.platform,

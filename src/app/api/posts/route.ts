@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   let brandQuery = supabase
     .from("brands")
-    .select("id, brand_name, generation_status, platforms, brand_colors, logo_url, content_tone, visual_style, business_type, niche_intelligence")
+    .select("id, brand_name, generation_status, platforms, brand_colors, logo_url, content_tone, visual_style, business_type, niche_intelligence, location")
     .eq("user_id", session.userId);
 
   if (brandId) {

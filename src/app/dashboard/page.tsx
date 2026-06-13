@@ -32,6 +32,7 @@ interface Brand {
   content_tone?: string;
   visual_style?: string;
   business_type?: string;
+  location?: string;
   logo_url?: string | null;
   platformNicheIntelligence?: Record<string, string>;
   [key: string]: unknown;
@@ -177,6 +178,7 @@ function GroupedPostCard({ posts, copiedId, onCopy, onEdit, brand, onImageReady,
               content_tone: brand.content_tone as string ?? "",
               visual_style: brand.visual_style as string ?? "",
               business_type: brand.business_type as string ?? "",
+              location: brand.location as string ?? "",
               logo_url: brand.logo_url as string ?? null,
             }}
             nicheIntelligence={platformNiche}
