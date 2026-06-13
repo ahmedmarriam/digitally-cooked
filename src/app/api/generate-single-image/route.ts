@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-export const maxDuration = 60;
+export const maxDuration = 120; // increased for rate limit retry waits (8s + 16s + 24s + generation)
 
 // Cycles so each post gets a different visual approach
 const VISUAL_APPROACHES = [
@@ -77,7 +77,7 @@ async function generateFlux(prompt: string, apiKey: string, retries = 3): Promis
       });
 
       if (res.status === 429) {
-        const wait = attempt * 2000;
+        const wait = attempt * 8000; // 8s, 16s, 24s — gives rate limit window time to reset
         console.warn(`Flux rate limited. Retrying in ${wait}ms (attempt ${attempt}/${retries})`);
         await new Promise((r) => setTimeout(r, wait));
         continue;
